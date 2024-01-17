@@ -6,23 +6,19 @@ export async function RedisClient(KEY: string) {
     .connect();
 
   const hasValueAtIndex = async (idx: number) => {
-    const value = await client.zRange(KEY, idx, idx);
-    return value.length > 0;
+    const value = await client.lIndex(KEY, idx);
+    return !!value;
   };
 
   const setValueAtIndex = async (idx: number) => {
     const hasValue = await hasValueAtIndex(idx);
     if (hasValue) return undefined;
-    await client.zAdd(KEY, {
-      score: idx,
-      value: idx.toString(),
-    });
-    const colorIndex = await client.zCard(KEY);
+    const colorIndex = await client.rPush(KEY, idx.toString());
     return colorIndex;
   };
 
   const getAllValues = async () => {
-    return client.zRange(KEY, 0, -1);
+    return client.lRange(KEY, 0, -1);
   };
 
   const reset = async () => {
