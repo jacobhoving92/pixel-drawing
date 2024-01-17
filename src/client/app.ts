@@ -1,16 +1,14 @@
 import { Canvas, Coordinate, getIndexFromCoordinate } from './canvas';
 import './styles.scss';
 
-import { io } from 'socket.io-client';
-
-const URL =
+const hostname =
   process.env.NODE_ENV === 'production'
-    ? window.location.host
-    : 'http://localhost:3000';
+    ? window.location.hostname + `:${window.location.port}`
+    : 'localhost:3000';
 
-const socket = io(URL, {
-  transports: ['websocket'],
-});
+const scheme = window.location.protocol === 'https:' ? 'wss' : 'ws';
+const serverUrl = `${scheme}://${hostname}`;
+const socket = new WebSocket(serverUrl);
 
 const setLoading = (loading: boolean) => {
   const loadingEl = document.getElementById('loading');
@@ -52,10 +50,9 @@ function updateUI(pixelsDrawnCount: number) {
 
 // ADD SOCKET LISTENERS
 
-socket.on('connect', () => {
+socket.addEventListener('open', () => {
   console.log('connected');
-  socket.emit('init');
-  fetch(URL + '/api/data')
+  fetch(window.location.protocol + '//' + hostname + '/api/data')
     .then(async (res) => {
       return await res.json();
     })
@@ -66,11 +63,15 @@ socket.on('connect', () => {
     });
 });
 
-socket.on('disconnect', () => {
+socket.addEventListener('close', () => {
   console.log('We disconnected from the socket');
 });
 
-socket.on('draw', ([coordinateIndex, pixelsDrawnCount]: [number, number]) => {
+socket.addEventListener('message', (event: MessageEvent<string>) => {
+  const [coordinateIndex, pixelsDrawnCount] = JSON.parse(event.data) as [
+    number,
+    number,
+  ];
   canvas.drawImmediate(coordinateIndex, pixelsDrawnCount);
   updateUI(pixelsDrawnCount);
 });
@@ -92,7 +93,7 @@ canvas.canvas.addEventListener('pointermove', (ev) => {
   const coordinate = [ev.offsetX, ev.offsetY] as Coordinate;
   const coordinateIndex = getIndexFromCoordinate(coordinate);
   if (canvas.pixelEmpty(coordinateIndex) && checkLastAsks(coordinateIndex)) {
-    socket.emit('askToDraw', coordinateIndex);
+    socket.send(JSON.stringify(coordinateIndex));
   }
   updateLastAsks(coordinateIndex);
 });
@@ -107,7 +108,7 @@ canvas.canvas.addEventListener('touchmove', (ev) => {
     ] as Coordinate;
     const coordinateIndex = getIndexFromCoordinate(coordinate);
     if (canvas.pixelEmpty(coordinateIndex) && checkLastAsks(coordinateIndex)) {
-      socket.emit('askToDraw', coordinateIndex);
+      socket.send(JSON.stringify(coordinateIndex));
     }
     updateLastAsks(coordinateIndex);
   }

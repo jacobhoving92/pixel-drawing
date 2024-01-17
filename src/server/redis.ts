@@ -1,7 +1,7 @@
 import { createClient } from 'redis';
 
 export async function RedisClient(KEY: string) {
-  const client = await createClient()
+  const client = await createClient() // { url: 'redis://host:port' }
     .on('error', (err) => console.log('Redis Client Error', err))
     .connect();
 

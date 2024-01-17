@@ -26,6 +26,8 @@ async function main() {
   const server = http.createServer(app);
   const socketServer = SocketServer(server, canvas);
 
+  socketServer.init();
+
   app.use(compression());
 
   app.get('/admin', (req, res) => {
