@@ -12,7 +12,7 @@
     "build": "rimraf dist && parcel build --dist-dir=dist/public && npx tsc -p ./tsconfig.json",
     "start": "node dist/index.js",
     "prettier": "prettier --config .prettierrc --write .",
-    "dev:server": "tsc -p ./tsconfig.json && node dist/index.js",
+    "dev:server": "ADMIN_PASS=testtest; tsc -p ./tsconfig.json && node dist/index.js",
     "dev:client": "parcel --dist-dir=dist/public",
     "clean": "rimraf dist && rimraf .parcel-cache"
   },

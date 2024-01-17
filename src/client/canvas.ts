@@ -105,20 +105,23 @@ export function Canvas(containerEl: HTMLElement | null) {
   }
 
   window.addEventListener('keyup', (ev) => {
-    if (ev.key === 'a') {
-      console.log('playback!');
-      context.clearRect(0, 0, canvas.width, canvas.height);
-      image = context.createImageData(canvas.width, canvas.height);
-      data = image.data;
-      stopped = false;
-      counter = 0;
-      animate();
-    }
     if (ev.key === 's') {
-      console.log('stop!');
-      stopped = true;
-      // drawSavedData();
+      window.location.hash = `${window.scrollX},${window.scrollY}`;
     }
+    // if (ev.key === 'a') {
+    //   console.log('playback!');
+    //   context.clearRect(0, 0, canvas.width, canvas.height);
+    //   image = context.createImageData(canvas.width, canvas.height);
+    //   data = image.data;
+    //   stopped = false;
+    //   counter = 0;
+    //   animate();
+    // }
+    // if (ev.key === 's') {
+    //   console.log('stop!');
+    //   stopped = true;
+    //   // drawSavedData();
+    // }
   });
   //   if (ev.key === 'p') {
   //     try {

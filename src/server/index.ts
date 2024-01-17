@@ -17,7 +17,7 @@ function isAuthorized(authorization?: string) {
     .toString()
     .split(':');
 
-  return username === 'admin' && password === 'pixel-peep';
+  return username === 'admin' && password === process.env.ADMIN_PASS;
 }
 
 async function main() {
@@ -69,7 +69,9 @@ async function main() {
   app.use(express.static(path.join(__dirname, 'public')));
 
   app.get('/api/data', async (_, res) => {
-    res.setHeader('Access-Control-Allow-Origin', 'http://localhost:1234');
+    if (process.env.NODE_ENV === 'development') {
+      res.setHeader('Access-Control-Allow-Origin', 'http://localhost:1234');
+    }
     const data = await canvas.getCurrentData();
     res.json(data);
   });

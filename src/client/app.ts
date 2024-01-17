@@ -1,4 +1,5 @@
 import { Canvas, Coordinate, getIndexFromCoordinate } from './canvas';
+import './reset.scss';
 import './styles.scss';
 
 const hostname =
