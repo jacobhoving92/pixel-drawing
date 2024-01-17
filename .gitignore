@@ -24,3 +24,5 @@ yarn-error.log*
 
 .parcel-cache
 .yarn
+
+dist

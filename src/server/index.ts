@@ -1,66 +1,80 @@
 import express from 'express';
 import http from 'http';
 import path from 'path';
-import fs from 'fs';
+import compression from 'compression';
 
 import { SocketServer } from './socket';
-import { Canvas, Coordinate } from './canvas';
+import { Canvas } from './canvas';
 
 const PORT = process.env.PORT || 3000;
-const DATA_PATH = path.join(__dirname, 'database.json');
 
-function getInitalData() {
-  return new Promise<Coordinate[]>((resolve, reject) => {
-    fs.readFile(DATA_PATH, 'utf8', (error, data) => {
-      if (error) {
-        console.log('Could not read file', error);
-        resolve([]);
-      }
-      try {
-        const parsed = JSON.parse(data);
-        resolve(parsed);
-      } catch (error) {
-        console.log('Could not parse JSON', error);
-        resolve([]);
-      }
-    });
-  });
-}
+function isAuthorized(authorization?: string) {
+  if (!authorization) return false;
+  const [username, password] = Buffer.from(
+    authorization.replace('Basic ', ''),
+    'base64',
+  )
+    .toString()
+    .split(':');
 
-let isSaving = false;
-function saveData(data: string) {
-  if (isSaving) return;
-  isSaving = true;
-  fs.writeFile(DATA_PATH, data, (error) => {
-    if (error) {
-      console.log('Error writing file', error);
-    } else {
-      console.log('Successfully wrote file.');
-    }
-    isSaving = false;
-  });
+  return username === 'admin' && password === 'pixel-peep';
 }
 
 async function main() {
-  const initialData = await getInitalData();
-
   const app = express();
-  const canvas = Canvas(initialData);
+  const canvas = await Canvas();
   const server = http.createServer(app);
   const socketServer = SocketServer(server, canvas);
 
+  app.use(compression());
+
+  app.get('/admin', (req, res) => {
+    const reject = () => {
+      res.setHeader('www-authenticate', 'Basic');
+      res.sendStatus(401);
+    };
+
+    const authorization = req.headers.authorization;
+    if (!isAuthorized(authorization)) {
+      return reject();
+    }
+
+    res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+  });
+
+  app.post('/admin', (req, res) => {
+    const reject = () => {
+      res.setHeader('www-authenticate', 'Basic');
+      res.sendStatus(401);
+    };
+
+    const authorization = req.headers.authorization;
+    if (!isAuthorized(authorization)) {
+      return reject();
+    }
+
+    console.log('resetting canvas');
+    canvas.reset();
+    res.json(
+      JSON.stringify({
+        success: true,
+        message: 'Canvas cleared',
+        status: 200,
+      }),
+    );
+  });
+
   app.use(express.static(path.join(__dirname, 'public')));
-  app.get('/api/data', (_, res) => {
-    res.json(canvas.getInitialData());
+
+  app.get('/api/data', async (_, res) => {
+    res.setHeader('Access-Control-Allow-Origin', 'http://localhost:1234');
+    const data = await canvas.getCurrentData();
+    res.json(data);
   });
 
   server.listen(PORT, () => {
     console.log(`Running server at http://localhost:${PORT}`);
   });
-
-  setInterval(() => {
-    saveData(JSON.stringify(canvas.getInitialData()));
-  }, 15000);
 }
 
 main();

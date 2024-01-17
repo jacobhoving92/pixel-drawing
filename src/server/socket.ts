@@ -1,6 +1,6 @@
 import { Server } from 'socket.io';
 import http from 'http';
-import { CanvasInstance, Coordinate } from './canvas';
+import { CanvasInstance } from './canvas';
 
 export function SocketServer(server: http.Server, canvas: CanvasInstance) {
   const io = new Server(server, {
@@ -10,9 +10,12 @@ export function SocketServer(server: http.Server, canvas: CanvasInstance) {
   io.on('connection', (socket) => {
     console.log('We have a connection!');
 
-    socket.on('askToDraw', (data: Coordinate) => {
-      if (canvas.allowedToDraw(data)) {
-        io.emit('draw', [data[0], data[1], canvas.getIndex()]);
+    socket.on('askToDraw', async (coordinateIndex: number) => {
+      console.log('asked to draw!', coordinateIndex);
+      const pixelsDrawnCount = await canvas.draw(coordinateIndex);
+      // If we get a number, the pixel is saved as drawn, else it the pixel is already set
+      if (pixelsDrawnCount) {
+        io.emit('draw', [coordinateIndex, pixelsDrawnCount]);
       }
     });
 
