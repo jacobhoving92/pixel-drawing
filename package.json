@@ -3,29 +3,36 @@
   "version": "0.0.1",
   "description": "",
   "private": true,
-  "source": "src/client/index.html",
+  "source": [
+    "src/client/admin.html",
+    "src/client/index.html"
+  ],
   "scripts": {
     "build:client": "parcel build --dist-dir=dist/public",
     "build": "rimraf dist && parcel build --dist-dir=dist/public && npx tsc -p ./tsconfig.json",
     "start": "node dist/index.js",
     "prettier": "prettier --config .prettierrc --write .",
-    "dev:server": "npx tsc -p ./tsconfig.json && node dist/index.js",
-    "dev:client": "parcel --dist-dir=dist/public"
+    "dev:server": "ADMIN_PASS=testtest; tsc -p ./tsconfig.json && node dist/index.js",
+    "dev:client": "parcel --dist-dir=dist/public",
+    "clean": "rimraf dist && rimraf .parcel-cache"
   },
-  "author": "",
+  "author": "Ingo Valente",
   "license": "MIT",
   "dependencies": {
+    "compression": "^1.7.4",
     "express": "^4.17.3",
+    "redis": "^4.6.12",
     "rimraf": "^5.0.1",
-    "socket.io": "^4.7.1",
-    "socket.io-client": "^4.7.1"
+    "ws": "^8.16.0"
   },
   "devDependencies": {
     "@parcel/transformer-sass": "^2.9.3",
-    "@types/express": "^4.17.17",
+    "@types/compression": "^1.7.5",
+    "@types/express": "^4.17.21",
     "@types/node": "^20.4.2",
-    "buffer": "^6.0.3",
-    "parcel": "^2.9.3",
+    "@types/ws": "^8.5.10",
+    "buffer": "^5.5.0||^6.0.0",
+    "parcel": "^2.11.0",
     "prettier": "^3.0.0",
     "typescript": "^5.1.6"
   },

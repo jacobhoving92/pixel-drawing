@@ -2,20 +2,28 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=0" />
     <title>16777216</title>
     <script type="module" src="app.ts"></script>
   </head>
   <body>
-    <div id="canvas" />
-    <div id="container">
-      <p class="allData">
-        Pixels drawn: <span id="pixelsDrawn"></span>, Pixels remaining:
-        <span id="pixelsRemaining"></span>, Current Color: R:<span
-          id="red"
-        ></span>
-        G:<span id="green"></span> B:<span id="blue"></span>
-      </p>
-      <button onclick="finish()">Finish</button>
+    <div id="canvas"></div>
+    <div id="text-container" style="display: none;">
+      <div id="credits" style="display: none;">Credits go here</div>
+      <div id="info">
+        <div id="text">
+          Pixels drawn: <span id="pixelsDrawn">-</span>, Pixels remaining:
+          <span id="pixelsRemaining">-</span>, Current Color: R:<span id="red"
+            >-</span
+          >
+          G:<span id="green">-</span> B:<span id="blue">-</span>
+        </div>
+        <div id="buttons">
+          <button id="processBtn">Process</button>
+          <button id="creditsBtn">Credits</button>
+        </div>
+      </div>
     </div>
+    <div id="loading">Loading pixels...</div>
   </body>
 </html>

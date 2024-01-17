@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>16777216 - admin</title>
+    <link rel="stylesheet" href="./reset.scss" />
+    <link rel="stylesheet" href="./admin.scss" />
+  </head>
+  <body>
+    <div id="root">
+      <h1>Welcome admin!</h1>
+      <form method="post">
+        <button>Clear canvas</button>
+      </form>
+      <button id="logout" type="button">Logout</button>
+    </div>
+    <script>
+      const logoutBtn = document.getElementById('logout');
+      logoutBtn.addEventListener('click', function() {
+        window.location.href = window.location.protocol + "//log:out@" + window.location.host;
+      })
+    </script>
+  </body>
+</html>

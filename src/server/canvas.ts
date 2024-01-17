@@ -1,31 +1,22 @@
+import { RedisClient } from './redis';
+
 export type Coordinate = [number, number];
 
-export function Canvas(initialData: Coordinate[] = []) {
-  const canvasWidth = 4096;
-  const coordinates: Coordinate[] = initialData;
-  const imageData = new Uint8ClampedArray(canvasWidth * canvasWidth);
-
-  function allowedToDraw([x, y]: Coordinate) {
-    const index = canvasWidth * y + x;
-    if (imageData[index] === 1) return false;
-    imageData[index] = 1;
-    coordinates.push([x, y]);
-    return true;
-  }
-
-  function getIndex() {
-    return coordinates.length;
-  }
-
-  function getInitialData() {
-    return coordinates;
-  }
+export async function Canvas() {
+  const client = await RedisClient('canvas');
 
   return {
-    allowedToDraw,
-    getIndex,
-    getInitialData,
+    async getCurrentData() {
+      const values = await client.getAllValues();
+      return values.map((v) => parseInt(v, 10));
+    },
+    draw(coordinateIndex: number) {
+      return client.setValueAtIndex(coordinateIndex);
+    },
+    reset() {
+      client.reset();
+    },
   };
 }
 
-export type CanvasInstance = ReturnType<typeof Canvas>;
+export type CanvasInstance = Awaited<ReturnType<typeof Canvas>>;
