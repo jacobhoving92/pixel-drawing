@@ -14,13 +14,25 @@ const socket = io(URL, {
 
 const setLoading = (loading: boolean) => {
   const loadingEl = document.getElementById('loading');
-  const info = document.getElementById('info');
+  const textEl = document.getElementById('text-container');
 
   if (loadingEl) loadingEl.style.display = loading ? 'flex' : 'none';
-  if (info) info.style.display = !loading ? 'flex' : 'none';
+  if (textEl) textEl.style.display = !loading ? 'flex' : 'none';
 };
 
+const toggleCredits = () => {
+  const creditsEl = document.getElementById('credits');
+  if (creditsEl)
+    creditsEl.style.display =
+      creditsEl.style.display === 'none' ? 'flex' : 'none';
+};
+
+const credistBtn = document.getElementById('creditsBtn');
+if (credistBtn) credistBtn.addEventListener('click', toggleCredits);
+
 const canvas = Canvas(document.getElementById('canvas'));
+
+// UPDATE INFO TEXT
 
 const pixelsDrawnEl = document.getElementById('pixelsDrawn');
 const pixelsRemainingEl = document.getElementById('pixelsRemaining');
@@ -37,6 +49,8 @@ function updateUI(pixelsDrawnCount: number) {
   if (gEl) gEl.textContent = `${color.g}`;
   if (bEl) bEl.textContent = `${color.b}`;
 }
+
+// ADD SOCKET LISTENERS
 
 socket.on('connect', () => {
   console.log('connected');
@@ -60,6 +74,8 @@ socket.on('draw', ([coordinateIndex, pixelsDrawnCount]: [number, number]) => {
   canvas.drawImmediate(coordinateIndex, pixelsDrawnCount);
   updateUI(pixelsDrawnCount);
 });
+
+// ACTUAL MOUSE/TOUCH DRAWING
 
 const lastAsks: number[] = [];
 
@@ -96,3 +112,20 @@ canvas.canvas.addEventListener('touchmove', (ev) => {
     updateLastAsks(coordinateIndex);
   }
 });
+
+// SCROLL COORDINATES
+
+function scrollFromHash() {
+  const hash = window.location.hash.replace('#', '');
+  const split = hash.split(',');
+  if (split.length === 2) {
+    const coordinate = split.map((v) => parseInt(v, 10));
+    window.scrollTo(coordinate[0], coordinate[1]);
+  }
+}
+
+window.addEventListener('hashchange', () => {
+  scrollFromHash();
+});
+
+scrollFromHash();

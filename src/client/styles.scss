@@ -16,16 +16,24 @@ body {
   font-size: 8px;
 }
 
-#info {
+#text-container {
   position: fixed;
   bottom: 10px;
-  display: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
   margin: 0 auto;
+  width: 100%;
+  gap: 10px;
+}
+
+#info {
+  display: flex;
   justify-content: center;
   align-items: center;
   pointer-events: none;
   gap: 10px;
-  width: 100%;
 }
 
 #loading {
