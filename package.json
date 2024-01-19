@@ -8,12 +8,13 @@
     "src/client/index.html"
   ],
   "scripts": {
-    "build:client": "parcel build --dist-dir=dist/public",
-    "build": "rimraf dist && parcel build --dist-dir=dist/public && npx tsc -p ./tsconfig.json",
     "start": "node dist/index.js",
-    "prettier": "prettier --config .prettierrc --write .",
-    "dev:server": "NODE_ENV=development;ADMIN_PASS=testtest; tsc -p ./tsconfig.json && node dist/index.js",
     "dev:client": "parcel --dist-dir=dist/public",
+    "dev:server": "NODE_ENV=development;ADMIN_PASS=testtest; tsc -p ./tsconfig.json && node dist/index.js",
+    "build": "yarn clean && yarn build:client && yarn build:server",
+    "build:client": "parcel build --dist-dir=dist/public",
+    "build:server": "npx tsc -p ./tsconfig.json",
+    "prettier": "prettier --config .prettierrc --write .",
     "clean": "rimraf dist && rimraf .parcel-cache"
   },
   "author": "Ingo Valente",
@@ -30,6 +31,7 @@
     "@types/compression": "^1.7.5",
     "@types/express": "^4.17.21",
     "@types/node": "^20.4.2",
+    "@types/redis": "^4.0.11",
     "@types/ws": "^8.5.10",
     "buffer": "^5.5.0||^6.0.0",
     "parcel": "^2.11.0",
