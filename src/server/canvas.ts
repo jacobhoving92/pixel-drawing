@@ -6,6 +6,10 @@ export async function Canvas() {
   const client = await RedisClient('canvas');
 
   return {
+    async getRawData() {
+      const values = await client.getAllValues();
+      return values;
+    },
     async getCurrentData() {
       const values = await client.getAllValues();
       return values.map((v) => parseInt(v, 10));

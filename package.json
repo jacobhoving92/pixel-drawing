@@ -12,7 +12,7 @@
     "build": "rimraf dist && parcel build --dist-dir=dist/public && npx tsc -p ./tsconfig.json",
     "start": "node dist/index.js",
     "prettier": "prettier --config .prettierrc --write .",
-    "dev:server": "ADMIN_PASS=testtest; tsc -p ./tsconfig.json && node dist/index.js",
+    "dev:server": "NODE_ENV=development;ADMIN_PASS=testtest; tsc -p ./tsconfig.json && node dist/index.js",
     "dev:client": "parcel --dist-dir=dist/public",
     "clean": "rimraf dist && rimraf .parcel-cache"
   },
@@ -26,7 +26,7 @@
     "ws": "^8.16.0"
   },
   "devDependencies": {
-    "@parcel/transformer-sass": "^2.9.3",
+    "@parcel/transformer-sass": "2.11.0",
     "@types/compression": "^1.7.5",
     "@types/express": "^4.17.21",
     "@types/node": "^20.4.2",

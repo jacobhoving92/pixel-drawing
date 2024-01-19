@@ -1,15 +1,7 @@
 import { Canvas, Coordinate, getIndexFromCoordinate } from './canvas';
 import './reset.scss';
+import { Socket } from './socket';
 import './styles.scss';
-
-const hostname =
-  process.env.NODE_ENV === 'production'
-    ? window.location.hostname + `:${window.location.port}`
-    : 'localhost:3000';
-
-const scheme = window.location.protocol === 'https:' ? 'wss' : 'ws';
-const serverUrl = `${scheme}://${hostname}`;
-const socket = new WebSocket(serverUrl);
 
 const setLoading = (loading: boolean) => {
   const loadingEl = document.getElementById('loading');
@@ -50,31 +42,32 @@ function updateUI(pixelsDrawnCount: number) {
 }
 
 // ADD SOCKET LISTENERS
+const hostname =
+  process.env.NODE_ENV === 'production'
+    ? window.location.hostname + `:${window.location.port}`
+    : 'localhost:3000';
 
-socket.addEventListener('open', () => {
-  console.log('connected');
-  fetch(window.location.protocol + '//' + hostname + '/api/data')
-    .then(async (res) => {
-      return await res.json();
-    })
-    .then((data: number[]) => {
-      canvas.drawData(data);
-      setLoading(false);
-      updateUI(data.length);
-    });
-});
-
-socket.addEventListener('close', () => {
-  console.log('We disconnected from the socket');
-});
-
-socket.addEventListener('message', (event: MessageEvent<string>) => {
-  const [coordinateIndex, pixelsDrawnCount] = JSON.parse(event.data) as [
-    number,
-    number,
-  ];
-  canvas.drawImmediate(coordinateIndex, pixelsDrawnCount);
-  updateUI(pixelsDrawnCount);
+const socket = Socket({
+  hostname,
+  onOpen: () => {
+    fetch(window.location.protocol + '//' + hostname + '/api/data')
+      .then(async (res) => {
+        return await res.json();
+      })
+      .then((data: number[]) => {
+        canvas.drawData(data);
+        setLoading(false);
+        updateUI(data.length);
+      });
+  },
+  onMessage: (message) => {
+    const [coordinateIndex, pixelsDrawnCount] = JSON.parse(message) as [
+      number,
+      number,
+    ];
+    canvas.drawImmediate(coordinateIndex, pixelsDrawnCount);
+    updateUI(pixelsDrawnCount);
+  },
 });
 
 // ACTUAL MOUSE/TOUCH DRAWING
@@ -91,7 +84,10 @@ function updateLastAsks(coordinateIndex: number) {
 }
 
 canvas.canvas.addEventListener('pointermove', (ev) => {
-  const coordinate = [ev.offsetX, ev.offsetY] as Coordinate;
+  const coordinate = [
+    Math.floor(ev.offsetX),
+    Math.floor(ev.offsetY),
+  ] as Coordinate;
   const coordinateIndex = getIndexFromCoordinate(coordinate);
   if (canvas.pixelEmpty(coordinateIndex) && checkLastAsks(coordinateIndex)) {
     socket.send(JSON.stringify(coordinateIndex));
@@ -100,12 +96,12 @@ canvas.canvas.addEventListener('pointermove', (ev) => {
 });
 
 canvas.canvas.addEventListener('touchmove', (ev) => {
-  if (ev.touches.length > 1) {
+  if (ev.touches.length === 1) {
     ev.preventDefault();
     ev.stopPropagation();
     const coordinate = [
-      ev.touches[0].clientX,
-      ev.touches[0].clientY,
+      Math.floor(ev.touches[0].clientX),
+      Math.floor(ev.touches[0].clientY),
     ] as Coordinate;
     const coordinateIndex = getIndexFromCoordinate(coordinate);
     if (canvas.pixelEmpty(coordinateIndex) && checkLastAsks(coordinateIndex)) {
