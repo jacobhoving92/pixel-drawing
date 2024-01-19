@@ -3,7 +3,9 @@ import Database from 'better-sqlite3';
 import { eq } from 'drizzle-orm';
 import { pixels } from './schema';
 
-const sqlite = new Database(process.env.DB_URL || './sqlite.db');
+const sqlite = new Database(
+  process.env.RENDER === 'true' ? '/var/data/sqlite.db' : './sqlite.db',
+);
 sqlite.pragma('journal_mode = WAL');
 const db = drizzle(sqlite);
 
