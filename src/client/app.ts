@@ -84,7 +84,10 @@ function updateLastAsks(coordinateIndex: number) {
 }
 
 canvas.canvas.addEventListener('pointermove', (ev) => {
-  const coordinate = [ev.offsetX, ev.offsetY] as Coordinate;
+  const coordinate = [
+    Math.floor(ev.offsetX),
+    Math.floor(ev.offsetY),
+  ] as Coordinate;
   const coordinateIndex = getIndexFromCoordinate(coordinate);
   if (canvas.pixelEmpty(coordinateIndex) && checkLastAsks(coordinateIndex)) {
     socket.send(JSON.stringify(coordinateIndex));
@@ -93,12 +96,12 @@ canvas.canvas.addEventListener('pointermove', (ev) => {
 });
 
 canvas.canvas.addEventListener('touchmove', (ev) => {
-  if (ev.touches.length > 1) {
+  if (ev.touches.length === 1) {
     ev.preventDefault();
     ev.stopPropagation();
     const coordinate = [
-      ev.touches[0].clientX,
-      ev.touches[0].clientY,
+      Math.floor(ev.touches[0].clientX),
+      Math.floor(ev.touches[0].clientY),
     ] as Coordinate;
     const coordinateIndex = getIndexFromCoordinate(coordinate);
     if (canvas.pixelEmpty(coordinateIndex) && checkLastAsks(coordinateIndex)) {

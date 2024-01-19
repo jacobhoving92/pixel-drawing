@@ -44,7 +44,7 @@ async function main() {
     res.sendFile(path.join(__dirname, 'public', 'admin.html'));
   });
 
-  app.post('/admin', (req, res) => {
+  app.post('/api/clear', (req, res) => {
     const reject = () => {
       res.setHeader('www-authenticate', 'Basic');
       res.sendStatus(401);
@@ -73,6 +73,14 @@ async function main() {
       res.setHeader('Access-Control-Allow-Origin', 'http://localhost:1234');
     }
     const data = await canvas.getCurrentData();
+    res.json(data);
+  });
+
+  app.get('/api/download', async (_, res) => {
+    if (process.env.NODE_ENV === 'development') {
+      res.setHeader('Access-Control-Allow-Origin', 'http://localhost:1234');
+    }
+    const data = await canvas.getRawData();
     res.json(data);
   });
 
