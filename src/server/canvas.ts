@@ -1,24 +1,24 @@
-import { RedisClient } from './redis';
+import { Store } from './store';
 
 export type Coordinate = [number, number];
 
 export async function Canvas() {
-  const client = await RedisClient('canvas');
+  const store = await Store();
 
   return {
     async getRawData() {
-      const values = await client.getAllValues();
+      const values = await store.getAllValues();
       return values;
     },
     async getCurrentData() {
-      const values = await client.getAllValues();
+      const values = await store.getAllValues();
       return values.map((v) => parseInt(v, 10));
     },
     draw(coordinateIndex: number) {
-      return client.setValueAtIndex(coordinateIndex);
+      return store.setValueAtIndex(coordinateIndex);
     },
     reset() {
-      client.reset();
+      store.reset();
     },
   };
 }
