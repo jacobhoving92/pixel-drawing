@@ -8,10 +8,10 @@
     "src/client/index.html"
   ],
   "scripts": {
-    "start": "node dist/index.js",
+    "start": "yarn db:push; node dist/index.js",
     "dev:client": "parcel --dist-dir=dist/public",
     "dev:server": "NODE_ENV=development;ADMIN_PASS=testtest; tsc -p ./tsconfig.json && node dist/index.js",
-    "build": "yarn clean && yarn build:client && yarn build:server && yarn db:generate && yarn db:push",
+    "build": "yarn clean && yarn build:client && yarn build:server && yarn db:generate",
     "build:client": "parcel build --dist-dir=dist/public",
     "build:server": "tsc -p ./tsconfig.json",
     "db:generate": "drizzle-kit generate:sqlite",
@@ -25,7 +25,6 @@
   "dependencies": {
     "better-sqlite3": "^9.3.0",
     "compression": "^1.7.4",
-    "dotenv": "^16.3.1",
     "drizzle-orm": "^0.29.3",
     "express": "^4.17.3",
     "rimraf": "^5.0.1",
