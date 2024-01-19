@@ -1,41 +1,30 @@
-import { drizzle } from 'drizzle-orm/better-sqlite3';
-import Database from 'better-sqlite3';
-import { eq } from 'drizzle-orm';
-import { pixels } from './schema';
-
-const sqlite = new Database(process.env.DB_URL || './sqlite.db');
-sqlite.pragma('journal_mode = WAL');
-const db = drizzle(sqlite);
+import { createClient } from 'redis';
 
 export async function Store() {
+  const KEY = 'canvas';
+
+  const client = await createClient({ url: process.env.REDIS_URL || undefined })
+    .on('error', (err) => console.log('Redis Client Error', err))
+    .connect();
+
   const hasValueAtIndex = async (coordinateIndex: number) => {
-    const value = await db
-      .select()
-      .from(pixels)
-      .where(eq(pixels.coordinate, coordinateIndex));
-    return value.length > 0;
+    const value = await client.lIndex(KEY, coordinateIndex);
+    return !!value;
   };
 
   const setValueAtIndex = async (coordinateIndex: number) => {
     const hasValue = await hasValueAtIndex(coordinateIndex);
     if (hasValue) return undefined;
-    const { lastInsertRowid } = await db
-      .insert(pixels)
-      .values({ coordinate: coordinateIndex });
-    return lastInsertRowid;
+    const colorIndex = await client.rPush(KEY, coordinateIndex.toString());
+    return colorIndex;
   };
 
   const getAllValues = async () => {
-    const values = await db
-      .select({
-        coordinateIndex: pixels.coordinate,
-      })
-      .from(pixels);
-    return values.map((v) => v.coordinateIndex);
+    return client.lRange(KEY, 0, -1);
   };
 
   const reset = async () => {
-    return db.delete(pixels);
+    return client.del(KEY);
   };
 
   return { hasValueAtIndex, setValueAtIndex, getAllValues, reset };

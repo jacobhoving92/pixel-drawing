@@ -12,7 +12,7 @@ export async function Canvas() {
     },
     async getCurrentData() {
       const values = await store.getAllValues();
-      return values;
+      return values.map((v) => parseInt(v, 10));
     },
     draw(coordinateIndex: number) {
       return store.setValueAtIndex(coordinateIndex);
