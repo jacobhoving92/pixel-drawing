@@ -3,11 +3,11 @@ import Database from 'better-sqlite3';
 import { eq } from 'drizzle-orm';
 import { pixels } from './schema';
 
-export async function Store() {
-  const sqlite = new Database('sqlite.db');
-  sqlite.pragma('journal_mode = WAL');
-  const db = drizzle(sqlite);
+const sqlite = new Database(Uprocess.env.DB_URL || './sqlite.db'RL);
+sqlite.pragma('journal_mode = WAL');
+const db = drizzle(sqlite);
 
+export async function Store() {
   const hasValueAtIndex = async (coordinateIndex: number) => {
     const value = await db
       .select()
