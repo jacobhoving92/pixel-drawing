@@ -8,7 +8,7 @@
     "src/client/index.html"
   ],
   "scripts": {
-    "start": "yarn db:push; node dist/index.js",
+    "start": "yarn db:push && node dist/index.js",
     "dev:client": "parcel --dist-dir=dist/public",
     "dev:server": "NODE_ENV=development;ADMIN_PASS=testtest; tsc -p ./tsconfig.json && node dist/index.js",
     "build": "yarn clean && yarn build:client && yarn build:server && yarn db:generate",
