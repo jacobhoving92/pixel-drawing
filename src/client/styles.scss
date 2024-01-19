@@ -45,6 +45,7 @@ body {
   width: 100%;
   gap: 10px;
   text-align: center;
+  pointer-events: none;
 }
 
 #info {
@@ -84,6 +85,7 @@ button {
   pointer-events: all;
   color: inherit;
   cursor: pointer;
+  pointer-events: all;
   &:hover {
     background-color: rgb(240, 240, 240);
   }
