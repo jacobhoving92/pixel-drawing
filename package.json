@@ -8,37 +8,32 @@
     "src/client/index.html"
   ],
   "scripts": {
-    "start": "yarn db:push && node dist/index.js",
+    "start": "node dist/index.js",
     "dev:client": "parcel --dist-dir=dist/public",
     "dev:server": "NODE_ENV=development;ADMIN_PASS=testtest; tsc -p ./tsconfig.json && node dist/index.js",
-    "build": "yarn clean && yarn build:client && yarn build:server && yarn db:generate",
+    "build": "yarn clean && yarn build:client && yarn build:server",
     "build:client": "parcel build --dist-dir=dist/public",
-    "build:server": "tsc -p ./tsconfig.json",
-    "db:generate": "drizzle-kit generate:sqlite",
-    "db:push": "drizzle-kit push:sqlite",
-    "db:studio": "drizzle-kit studio",
+    "build:server": "npx tsc -p ./tsconfig.json",
     "prettier": "prettier --config .prettierrc --write .",
     "clean": "rimraf dist && rimraf .parcel-cache"
   },
   "author": "Ingo Valente",
   "license": "MIT",
   "dependencies": {
-    "better-sqlite3": "^9.3.0",
     "compression": "^1.7.4",
-    "drizzle-orm": "^0.29.3",
     "express": "^4.17.3",
+    "redis": "^4.6.12",
     "rimraf": "^5.0.1",
     "ws": "^8.16.0"
   },
   "devDependencies": {
     "@parcel/transformer-sass": "2.11.0",
-    "@types/better-sqlite3": "^7.6.8",
     "@types/compression": "^1.7.5",
     "@types/express": "^4.17.21",
     "@types/node": "^20.4.2",
+    "@types/redis": "^4.0.11",
     "@types/ws": "^8.5.10",
     "buffer": "^5.5.0||^6.0.0",
-    "drizzle-kit": "^0.20.13",
     "parcel": "^2.11.0",
     "prettier": "^3.0.0",
     "typescript": "^5.1.6"
