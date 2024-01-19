@@ -8,15 +8,16 @@
     "src/client/index.html"
   ],
   "scripts": {
+    "start": "node dist/index.js",
+    "dev:client": "parcel --dist-dir=dist/public",
+    "dev:server": "NODE_ENV=development;ADMIN_PASS=testtest; tsc -p ./tsconfig.json && node dist/index.js",
+    "build": "yarn clean && yarn build:client && yarn build:server && yarn db:generate && yarn db:push",
     "build:client": "parcel build --dist-dir=dist/public",
     "build:server": "tsc -p ./tsconfig.json",
-    "generate:db": "drizzle-kit generate:sqlite",
-    "push:db": "drizzle-kit push:sqlite",
-    "build": "yarn clean && yarn build:client && yarn build:server && yarn generate:db && yarn push:db",
-    "start": "node dist/index.js",
+    "db:generate": "drizzle-kit generate:sqlite",
+    "db:push": "drizzle-kit push:sqlite",
+    "db:studio": "drizzle-kit studio",
     "prettier": "prettier --config .prettierrc --write .",
-    "dev:server": "NODE_ENV=development;ADMIN_PASS=testtest; tsc -p ./tsconfig.json && node dist/index.js",
-    "dev:client": "parcel --dist-dir=dist/public",
     "clean": "rimraf dist && rimraf .parcel-cache"
   },
   "author": "Ingo Valente",

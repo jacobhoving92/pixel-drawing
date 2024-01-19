@@ -42,7 +42,7 @@ export function Socket({
 
   return {
     send: (data: string) => {
-      if (!socket || !socket.OPEN) return;
+      if (!socket || socket.readyState !== 1) return;
       socket.send(data);
     },
   };
