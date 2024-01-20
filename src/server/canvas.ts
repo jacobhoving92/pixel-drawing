@@ -1,5 +1,5 @@
 import { Store } from './store';
-
+import fs from 'fs';
 export type Coordinate = [number, number];
 
 export async function Canvas() {
@@ -16,6 +16,15 @@ export async function Canvas() {
     },
     draw(coordinateIndex: number) {
       return store.setValueAtIndex(coordinateIndex);
+    },
+    async setFromFile(file: { path: string }) {
+      try {
+        const data = fs.readFileSync(file.path);
+        const json = JSON.parse(data.toString());
+        return store.setValues(json);
+      } catch {
+        return false;
+      }
     },
     reset() {
       store.reset();
