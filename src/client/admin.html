@@ -9,12 +9,76 @@
   </head>
   <body>
     <div id="root">
-      <h1>Welcome admin!</h1>
-      <button id="clear" type="button">Clear canvas</button>
-      <a href="/api/download" download>Download data</a>
-      <button id="logout" type="button">Logout</button>
+      <header>
+        <h1>Welcome admin!</h1><button id="logout" type="button">Logout</button>
+      </header>
+
+      <main>
+        <div class="block">
+          <button id="clear" type="button">Clear canvas</button>
+        </div>
+        <div class="block">
+          <a id="download" href="/api/download" download>Download data</a>
+        </div>
+        <form
+          id="uploadForm"
+          class="block"
+        >
+          <strong>Upload JSON canvas data</strong>
+          <div id="error">Unknown error occured</div>
+          <div>
+            <input type="file" id="file" name="file" accept="application/JSON"  />
+          </div>
+          <div>
+            <button id="uploadBtn" type="submit">Upload file</button>
+          </div>
+        </form>
+      </main>
     </div>
+
     <script>
+      const form = document.getElementById("uploadForm");
+      form.addEventListener("submit", submitForm);
+      const uploadBtn = document.getElementById('uploadBtn');
+      const errorMessage = document.getElementById('error')
+
+      function submitForm(e) {
+          e.preventDefault();
+          try {
+            errorMessage.classList.remove('visible')
+            uploadBtn.disabled = true
+            uploadBtn.textContent = 'Uploading…'
+            const fileInput = document.getElementById("file");
+            const file = fileInput.files[0]
+            if(!file) throw Error('Select a file')
+            const formData = new FormData();
+            formData.append("file", file);
+            fetch("/api/upload", {
+              method: 'POST',
+              body: formData
+            }).then((data) => data.json()).then(data => {
+              if(data.success) {
+                setTimeout(() => {
+                  uploadBtn.disabled = false
+                  uploadBtn.textContent = 'Upload file'
+                }, 3000)
+              } else {
+                throw new Error('Could not parse response')
+              }
+            }).catch(e => {
+              console.error(e)
+              errorMessage.classList.add('visible')
+              uploadBtn.disabled = false
+              uploadBtn.textContent = 'Upload file'
+            })
+          } catch (e) {
+            console.error('Could not upload file', e)
+            errorMessage.classList.add('visible')
+            uploadBtn.disabled = false
+            uploadBtn.textContent = 'Upload file'
+          }
+      }
+
       const logoutBtn = document.getElementById('logout');
       logoutBtn.addEventListener('click', function() {
         window.location.href = window.location.protocol + "//log:out@" + window.location.host;
@@ -26,11 +90,10 @@
         if(confirmed) {
           clearBtn.disabled = true
           clearBtn.textContent = 'Loading…';
-          fetch('/api/clear', { method: 'post' }).then((data) => {
-            return data.json()
-          }).then(data => {
-            const { success } = JSON.parse(data)
-            if(success) {
+          fetch('/api/clear', { method: 'post' }).then((data) => 
+            data.json()
+          ).then(data => {
+            if(data.success) {
               setTimeout(() => {
                 clearBtn.disabled = false
                 clearBtn.textContent = 'Clear canvas'

@@ -2,6 +2,10 @@ html, body {
   height: 100%;
 }
 
+h1 {
+  display: inline-block;
+}
+
 body {
   margin: 0;
   padding: 2em;
@@ -12,9 +16,35 @@ body {
 }
 
 #root {
+  min-height: 100%;
+}
+
+header {
+  margin-bottom: 1em;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+main {
   display: grid;
   gap: 1em;
   align-content: flex-start;
   justify-items: flex-start;
-  min-height: 100%;
+}
+
+.block {
+  display: grid;
+  gap: 1em;
+  background: #eee;
+  padding: 1em;
+}
+
+#error {
+  color: red;
+  display: none;
+}
+
+.visible {
+  display: block !important;
 }

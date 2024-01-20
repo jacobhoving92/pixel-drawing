@@ -27,5 +27,19 @@ export async function Store() {
     return client.del(KEY);
   };
 
-  return { hasValueAtIndex, setValueAtIndex, getAllValues, reset };
+  const setValues = async (values: string[]) => {
+    try {
+      await reset();
+      await Promise.all(
+        values.map((v) => {
+          return client.rPush(KEY, v.toString());
+        }),
+      );
+      return true;
+    } catch (e) {
+      return false;
+    }
+  };
+
+  return { hasValueAtIndex, setValueAtIndex, getAllValues, setValues, reset };
 }
