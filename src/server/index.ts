@@ -108,7 +108,7 @@ async function main() {
 
   app.get('/api/data', async (_, res) => {
     if (process.env.NODE_ENV === 'development') {
-      res.setHeader('Access-Control-Allow-Origin', 'http://localhost:1234');
+      res.setHeader('Access-Control-Allow-Origin', '*');
     }
     const data = await canvas.getCurrentData();
     res.json(data);
@@ -116,7 +116,7 @@ async function main() {
 
   app.get('/api/download', authenticate, async (_, res) => {
     if (process.env.NODE_ENV === 'development') {
-      res.setHeader('Access-Control-Allow-Origin', 'http://localhost:1234');
+      res.setHeader('Access-Control-Allow-Origin', '*');
     }
     const data = await canvas.getRawData();
     res.json(data);
