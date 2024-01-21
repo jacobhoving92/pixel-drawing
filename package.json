@@ -10,10 +10,10 @@
   "scripts": {
     "start": "node dist/index.js",
     "dev:client": "parcel --dist-dir=dist/public",
-    "dev:server": "NODE_ENV=development;ADMIN_PASS=testtest; tsc -p ./tsconfig.json && node dist/index.js",
+    "dev:server": "NODE_ENV=development;ADMIN_PASS=testtest; yarn build:server && yarn start",
     "build": "yarn clean && yarn build:client && yarn build:server",
     "build:client": "parcel build --dist-dir=dist/public",
-    "build:server": "npx tsc -p ./tsconfig.json",
+    "build:server": "tsc -p ./tsconfig.server.json",
     "prettier": "prettier --config .prettierrc --write .",
     "clean": "rimraf dist && rimraf .parcel-cache"
   },

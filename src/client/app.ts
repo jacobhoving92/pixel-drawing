@@ -45,7 +45,7 @@ function updateUI(pixelsDrawnCount: number) {
 const hostname =
   process.env.NODE_ENV === 'production'
     ? window.location.hostname + `:${window.location.port}`
-    : 'localhost:3000';
+    : '0.0.0.0:3000';
 
 const socket = Socket({
   hostname,
@@ -83,11 +83,8 @@ function updateLastAsks(coordinateIndex: number) {
   lastAsks.push(coordinateIndex);
 }
 
-canvas.canvas.addEventListener('pointermove', (ev) => {
-  const coordinate = [
-    Math.floor(ev.offsetX),
-    Math.floor(ev.offsetY),
-  ] as Coordinate;
+window.addEventListener('mousemove', (ev) => {
+  const coordinate = [Math.floor(ev.pageX), Math.floor(ev.pageY)] as Coordinate;
   const coordinateIndex = getIndexFromCoordinate(coordinate);
   if (canvas.pixelEmpty(coordinateIndex) && checkLastAsks(coordinateIndex)) {
     socket.send(JSON.stringify(coordinateIndex));
@@ -95,20 +92,102 @@ canvas.canvas.addEventListener('pointermove', (ev) => {
   updateLastAsks(coordinateIndex);
 });
 
-canvas.canvas.addEventListener('touchmove', (ev) => {
+type Coords = {
+  x: number;
+  y: number;
+};
+let tpCache: Touch[] = [];
+
+const midpoint = ([t1, t2]: Touch[]): Coords => ({
+  x: (t1.clientX + t2.clientX) / 2,
+  y: (t1.clientY + t2.clientY) / 2,
+});
+
+let initialWindowX = window.scrollX;
+let initialWindowY = window.scrollY;
+let maxX = 4096 - window.innerWidth;
+let maxY = 4096 - window.innerHeight;
+let maxTranslateX = window.innerWidth;
+let maxTranslateY = window.innerHeight;
+
+window.addEventListener('touchstart', (ev) => {
+  ev.preventDefault();
+  initialWindowX = window.scrollX;
+  initialWindowY = window.scrollY;
+  if (ev.targetTouches.length === 2) {
+    for (let i = 0; i < ev.targetTouches.length; i++) {
+      tpCache.push(ev.targetTouches[i]);
+    }
+  }
+});
+
+function handlePan(ev: TouchEvent) {
+  if (ev.targetTouches.length === 2) {
+    // && ev.changedTouches.length === 2
+    const point1 = tpCache.findLastIndex(
+      (tp) => tp.identifier === ev.targetTouches[0].identifier,
+    );
+    const point2 = tpCache.findLastIndex(
+      (tp) => tp.identifier === ev.targetTouches[1].identifier,
+    );
+
+    if (point1 >= 0 && point2 >= 0) {
+      const initialMidpoint = midpoint([tpCache[point1], tpCache[point2]]);
+      const currentMidpoint = midpoint([
+        ev.targetTouches[0],
+        ev.targetTouches[1],
+      ]);
+
+      const translation = {
+        x: Math.max(
+          -maxTranslateX,
+          Math.min(maxTranslateX, currentMidpoint.x - initialMidpoint.x),
+        ),
+        y: Math.max(
+          -maxTranslateY,
+          Math.min(maxTranslateY, currentMidpoint.y - initialMidpoint.y),
+        ),
+      };
+
+      window.scrollTo(
+        Math.max(0, Math.min(maxX, initialWindowX - translation.x)),
+        Math.max(0, Math.min(maxY, initialWindowY - translation.y)),
+      );
+    }
+  } else {
+    tpCache = [];
+  }
+}
+
+window.addEventListener('resize', () => {
+  maxX = 4096 - window.innerWidth;
+  maxY = 4096 - window.innerHeight;
+  maxTranslateX = window.innerWidth;
+  maxTranslateY = window.innerHeight;
+});
+
+window.addEventListener('touchmove', (ev) => {
+  ev.preventDefault();
   if (ev.touches.length === 1) {
-    ev.preventDefault();
-    ev.stopPropagation();
     const coordinate = [
-      Math.floor(ev.touches[0].clientX),
-      Math.floor(ev.touches[0].clientY),
+      Math.floor(ev.touches[0].pageX),
+      Math.floor(ev.touches[0].pageY),
     ] as Coordinate;
     const coordinateIndex = getIndexFromCoordinate(coordinate);
     if (canvas.pixelEmpty(coordinateIndex) && checkLastAsks(coordinateIndex)) {
       socket.send(JSON.stringify(coordinateIndex));
     }
     updateLastAsks(coordinateIndex);
+    return;
   }
+
+  if (ev.touches.length === 2 && ev.targetTouches.length === 2) {
+    handlePan(ev);
+  }
+});
+
+window.addEventListener('touchend', (ev) => {
+  ev.preventDefault();
 });
 
 // SCROLL COORDINATES
