@@ -69,10 +69,7 @@ export function UI(canvas: Canvas) {
 
   // UPDATE INFO TEXT
   function updateText(pixelsDrawnCount: number, force?: boolean) {
-    if (animating && !force) {
-      returnCount = pixelsDrawnCount;
-      return;
-    }
+    if (animating && !force) return;
     if (el.pixelsDrawn) el.pixelsDrawn.textContent = `${pixelsDrawnCount}`;
     if (el.pixelsRemaining)
       el.pixelsRemaining.textContent = `${canvas.totalPixels - pixelsDrawnCount}`;
@@ -80,6 +77,9 @@ export function UI(canvas: Canvas) {
     if (el.r) el.r.textContent = `${color.r}`;
     if (el.g) el.g.textContent = `${color.g}`;
     if (el.b) el.b.textContent = `${color.b}`;
+    if (!animating) {
+      returnCount = pixelsDrawnCount;
+    }
   }
 
   function onStartAnimation() {
@@ -105,8 +105,8 @@ export function UI(canvas: Canvas) {
   function toggleAnimation() {
     if (!animating) {
       if (isLoading()) return;
-      canvas.startAnimation(onStopAnimation, forceUpdateText);
       onStartAnimation();
+      canvas.startAnimation(onStopAnimation, forceUpdateText);
     } else {
       stopAnimation();
     }
