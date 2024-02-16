@@ -4,7 +4,7 @@ let speed = 200;
 
 export type Coordinate = [number, number];
 
-let backupData: number[];
+let backupIndices: number[];
 let backupImage: ImageData;
 
 export function getIndexFromCoordinate([x, y]: Coordinate) {
@@ -23,25 +23,29 @@ export function Canvas(containerEl: HTMLElement | null) {
   if (!context) throw new Error('Could not create canvas context!');
 
   context.imageSmoothingEnabled = false;
-  context.fillStyle = 'white';
-  context.fillRect(0, 0, canvas.width, canvas.height);
+  // context.fillStyle = 'white';
+  context.clearRect(0, 0, canvas.width, canvas.height);
   let image = context.createImageData(canvas.width, canvas.height);
   let data = image.data;
+  // let buffer = new Uint32Array(data.buffer);
 
   function clearCanvas() {
     if (!context) throw new Error('Could not create canvas context!');
-    context.fillStyle = 'white';
-    context.fillRect(0, 0, canvas.width, canvas.height);
+    // context.fillStyle = 'white';
+    context.clearRect(0, 0, canvas.width, canvas.height);
     image = context.createImageData(canvas.width, canvas.height);
     data = image.data;
+    // buffer = new Uint32Array(data.buffer);
   }
 
-  function drawPixel(coordinateIndex: number, pixelsDrawnCount: number) {
+  function drawPixelToBuffer(
+    coordinateIndex: number,
+    pixelsDrawnCount: number,
+  ) {
+    const color = getColor(pixelsDrawnCount);
     const index = 4 * coordinateIndex;
 
-    const color = getColor(pixelsDrawnCount);
-
-    data[index + 0] = color.r;
+    data[index] = color.r;
     data[index + 1] = color.g;
     data[index + 2] = color.b;
     data[index + 3] = 255;
@@ -52,7 +56,7 @@ export function Canvas(containerEl: HTMLElement | null) {
     return data[index + 3] === 0;
   }
 
-  function swapBuffer() {
+  function drawBuffer() {
     context?.putImageData(image, 0, 0);
   }
 
@@ -68,6 +72,9 @@ export function Canvas(containerEl: HTMLElement | null) {
     // Check if pixel already drawn
     if (!force && data[index + 3] !== 0) return;
     const color = getColor(pixelsDrawnCount);
+    // data[index] = color.r;
+    // data[index + 1] = color.g;
+    // data[index + 2] = color.b;
     data[index + 3] = 255;
 
     pixel.data[0] = color.r;
@@ -81,7 +88,7 @@ export function Canvas(containerEl: HTMLElement | null) {
 
   function erasePixel(coordinateIndex: number) {
     const index = 4 * coordinateIndex;
-
+    pixel.data[index + 3] = 0;
     data[index + 3] = 0;
     const coordinate = getCoordinateFromCoordinateIndex(coordinateIndex);
     context?.putImageData(pixel, coordinate[0], coordinate[1]);
@@ -97,15 +104,15 @@ export function Canvas(containerEl: HTMLElement | null) {
     };
   }
 
-  function drawData(data: number[]) {
-    if (!data || !data.length) return;
+  function drawData(indices: number[]) {
+    if (!indices || !indices.length) return;
     console.log('Start drawing initial data…', performance.now());
     clearCanvas();
-    backupData = data;
-    data.forEach((coordinateIndex, index) => {
-      drawPixel(coordinateIndex, index);
+    backupIndices = indices;
+    indices.forEach((coordinateIndex, index) => {
+      drawPixelToBuffer(coordinateIndex, index);
     });
-    swapBuffer();
+    drawBuffer();
     backupImage = image;
     console.log('Done.', performance.now());
   }
@@ -117,21 +124,19 @@ export function Canvas(containerEl: HTMLElement | null) {
     animating = false;
     if (backupImage) {
       image = backupImage;
-      swapBuffer();
+      drawBuffer();
     }
   }
 
   function animate(cb?: () => void, onUpdate?: (counter: number) => void) {
-    let runToLength = backupData.length - 1;
+    let runToLength = backupIndices.length - 1;
     function innerAnimate() {
       for (let i = 0; i < speed; i++) {
         if (counter < runToLength) {
-          drawPixel(backupData[counter], counter);
+          swapPixel(backupIndices[counter], counter);
           counter++;
         }
       }
-
-      swapBuffer();
 
       if (animating && counter < runToLength) {
         if (onUpdate) onUpdate(counter);

@@ -2,9 +2,6 @@ import { Canvas, Coordinate, getIndexFromCoordinate } from './canvas';
 import { Socket } from './socket';
 import { UI } from './ui';
 
-import './reset.scss';
-import './styles.scss';
-
 let previewDrawnCount = 0;
 
 const canvas = Canvas(document.getElementById('canvas'));
@@ -128,15 +125,22 @@ window.addEventListener('touchstart', (ev) => {
   ui.checkTouchMessage();
 });
 
-canvas.canvas.addEventListener('touchstart', (ev) => {
-  if (ev.targetTouches.length === 2) {
-    initialWindowX = window.scrollX;
-    initialWindowY = window.scrollY;
-    for (let i = 0; i < ev.targetTouches.length; i++) {
-      tpCache.push(ev.targetTouches[i]);
+canvas.canvas.addEventListener(
+  'touchstart',
+  (ev) => {
+    if (ev.targetTouches.length === 2) {
+      ev.preventDefault();
+      initialWindowX = window.scrollX;
+      initialWindowY = window.scrollY;
+      for (let i = 0; i < ev.targetTouches.length; i++) {
+        tpCache.push(ev.targetTouches[i]);
+      }
     }
-  }
-});
+  },
+  {
+    passive: false,
+  },
+);
 
 window.addEventListener(
   'touchend',
@@ -220,7 +224,6 @@ canvas.canvas.addEventListener(
 );
 
 // SCROLL COORDINATES
-
 function scrollFromHash() {
   const hash = window.location.hash.replace('#', '');
   const split = hash.split(',');
