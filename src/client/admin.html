@@ -15,23 +15,26 @@
 
       <main>
         <div class="block">
+          <strong>Erasing</strong>
+          <div>Keep in mind that erasing will shift all colors.</div>
+          <a href="/erase">Eraser</a>
           <button id="clear" type="button">Clear canvas</button>
         </div>
         <div class="block">
-          <a id="download" href="/api/download" download>Download data</a>
+          <strong>Backup</strong>
+          <a id="download" href="/api/download" download>Download canvas data</a>
         </div>
         <form
           id="uploadForm"
           class="block"
         >
           <strong>Upload JSON canvas data</strong>
+          <div>This will replace all current canvas data.</div>
           <div id="error">Unknown error occured</div>
           <div>
             <input type="file" id="file" name="file" accept="application/JSON"  />
           </div>
-          <div>
             <button id="uploadBtn" type="submit">Upload file</button>
-          </div>
         </form>
       </main>
     </div>
@@ -86,7 +89,7 @@
 
       const clearBtn = document.getElementById('clear');
       clearBtn.addEventListener('click', function() {
-        const confirmed = window.confirm('Clear canvas?')
+        const confirmed = window.confirm('Are you sure you want to clear the whole canvas?')
         if(confirmed) {
           clearBtn.disabled = true
           clearBtn.textContent = 'Loading…';

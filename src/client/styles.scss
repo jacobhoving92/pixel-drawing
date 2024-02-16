@@ -6,11 +6,8 @@
   font-display: swap;
 }
 
-* {
-  box-sizing: border-box;
-}
-
-html, body {
+html,
+body {
   touch-action: none;
 }
 
@@ -22,28 +19,30 @@ body {
   color: black;
   font-family: 'pixelArial', sans-serif;
   font-size: 8px;
-  line-height: 1.4;
+  line-height: 1.6;
+  text-size-adjust: 100%;
+  -webkit-text-size-adjust: 100%;
   text-shadow:
-  -1px -1px 0 rgb(255, 255, 255),
-   0   -1px 0 rgb(255, 255, 255),
-   1px -1px 0 rgb(255, 255, 255),
-   1px  0   0 rgb(255, 255, 255),
-   1px  1px 0 rgb(255, 255, 255),
-   0    1px 0 rgb(255, 255, 255),
-  -1px  1px 0 rgb(255, 255, 255),
-  -1px  0   0 rgb(255, 255, 255);
+    -1px -1px 0 rgb(255, 255, 255),
+    0 -1px 0 rgb(255, 255, 255),
+    1px -1px 0 rgb(255, 255, 255),
+    1px 0 0 rgb(255, 255, 255),
+    1px 1px 0 rgb(255, 255, 255),
+    0 1px 0 rgb(255, 255, 255),
+    -1px 1px 0 rgb(255, 255, 255),
+    -1px 0 0 rgb(255, 255, 255);
 }
 
 #text-container {
   position: fixed;
-  bottom: 10px;
+  bottom: 20px;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
   align-items: center;
   margin: 0 auto;
   width: 100%;
-  gap: 10px;
+  gap: 18px;
   padding: 0 10px;
   text-align: center;
   pointer-events: none;
@@ -53,43 +52,47 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  pointer-events: none;
   gap: 10px;
   flex-wrap: wrap;
-
 }
 
 #loading {
   position: fixed;
-  bottom: 14px;
-  display: flex;
-  margin: 0 auto;
-  width: 100%;
-  align-items: center;
-  justify-content: center;
-}
-
-#buttons {
-  display: flex;
-  gap: 5px;
-  align-items: center;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
 }
 
 button {
-  padding: 3px 2px 3px 5px;
+  padding: 1px 3px 1px 4px;
   font-size: inherit;
   font-family: inherit;
   appearance: none;
   -webkit-appearance: none;
   border: 1px solid black;
   background-color: white;
-  pointer-events: all;
   color: inherit;
   cursor: pointer;
-  pointer-events: all;
-  &:hover {
-    background-color: rgb(240, 240, 240);
+  pointer-events: all !important;
+  &.active {
+    background-color: black;
+    color: white;
   }
+  @media (hover: hover) {
+    &:hover {
+      background-color: black;
+      color: white;
+    }
+  }
+}
+
+.colors {
+  display: inline-block;
+}
+
+#canvas {
+  touch-action: none;
 }
 
 canvas {
@@ -98,4 +101,42 @@ canvas {
   background: white;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
+  touch-action: none;
+}
+
+#touch {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  text-align: center;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  width: 100%;
+  padding: 0 10px;
+}
+
+body.largeType {
+  font-size: 16px;
+  text-shadow:
+    -2px -2px 0 rgb(255, 255, 255),
+    0 -2px 0 rgb(255, 255, 255),
+    2px -2px 0 rgb(255, 255, 255),
+    2px 0 0 rgb(255, 255, 255),
+    2px 2px 0 rgb(255, 255, 255),
+    0 2px 0 rgb(255, 255, 255),
+    -2px 2px 0 rgb(255, 255, 255),
+    -2px 0 0 rgb(255, 255, 255);
+}
+
+.largeType button {
+  border: 2px solid black;
+}
+
+.largeType #text-container {
+  bottom: 24px;
+  gap: 20px;
+}
+
+.hidden {
+  display: none;
 }

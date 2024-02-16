@@ -1307,6 +1307,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/lodash@npm:^4.14.202":
+  version: 4.14.202
+  resolution: "@types/lodash@npm:4.14.202"
+  checksum: a91acf3564a568c6f199912f3eb2c76c99c5a0d7e219394294213b3f2d54f672619f0fde4da22b29dc5d4c31457cd799acc2e5cb6bd90f9af04a1578483b6ff7
+  languageName: node
+  linkType: hard
+
 "@types/mime@npm:*":
   version: 3.0.4
   resolution: "@types/mime@npm:3.0.4"
@@ -2948,6 +2955,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"lodash@npm:^4.17.21":
+  version: 4.17.21
+  resolution: "lodash@npm:4.17.21"
+  checksum: eb835a2e51d381e561e508ce932ea50a8e5a68f4ebdd771ea240d3048244a8d13658acbd502cd4829768c56f2e16bdd4340b9ea141297d472517b83868e677f7
+  languageName: node
+  linkType: hard
+
 "lru-cache@npm:^10.0.1, lru-cache@npm:^9.1.1 || ^10.0.0":
   version: 10.1.0
   resolution: "lru-cache@npm:10.1.0"
@@ -3524,12 +3538,14 @@ __metadata:
     "@parcel/transformer-sass": 2.11.0
     "@types/compression": ^1.7.5
     "@types/express": ^4.17.21
+    "@types/lodash": ^4.14.202
     "@types/multer": ^1.4.11
     "@types/node": ^20.4.2
     "@types/ws": ^8.5.10
     buffer: ^5.5.0||^6.0.0
     compression: ^1.7.4
     express: ^4.17.3
+    lodash: ^4.17.21
     multer: ^1.4.5-lts.1
     parcel: ^2.11.0
     prettier: ^3.0.0

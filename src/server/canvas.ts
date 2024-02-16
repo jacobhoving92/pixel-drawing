@@ -14,8 +14,11 @@ export async function Canvas() {
       const values = await store.getAllValues();
       return values.map((v) => parseInt(v, 10));
     },
-    draw(coordinateIndex: number) {
+    draw(coordinateIndex: string) {
       return store.setValueAtIndex(coordinateIndex);
+    },
+    erase(coordinateIndex: string) {
+      return store.removeValueAtIndex(coordinateIndex);
     },
     async setFromFile(file: { path: string }) {
       try {

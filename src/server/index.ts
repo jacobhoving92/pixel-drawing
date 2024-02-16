@@ -26,7 +26,7 @@ const storage = multer.diskStorage({
 const upload = multer({
   storage,
   limits: {
-    fileSize: 10000000, // 100 MB
+    fileSize: 100 * 1000 * 1000, // 100 MB
   },
   fileFilter: (req, file, callback) => {
     if (!file.originalname.match(/\.(json)$/)) {
@@ -73,6 +73,10 @@ async function main() {
 
   app.get('/admin', authenticate, (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+  });
+
+  app.get('/erase', authenticate, (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'erase.html'));
   });
 
   app.post('/api/clear', authenticate, (req, res) => {

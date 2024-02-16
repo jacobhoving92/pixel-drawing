@@ -8,22 +8,21 @@
   </head>
   <body>
     <div id="canvas"></div>
-    <div id="text-container" style="display: none;">
-      <div id="credits" style="display: none;">Credits go here</div>
+    <div id="text-container" class="hidden">
+      <div id="credits" class="hidden">16777216, Concept &amp; Design: Jacob Hoving, Programming: Ingo Valente</div>
       <div id="info">
         <div id="text">
           Pixels drawn: <span id="pixelsDrawn">-</span>, Pixels remaining:
-          <span id="pixelsRemaining">-</span>, Current Color: R:<span id="red"
+          <span id="pixelsRemaining">-</span>, <span class="colors">Current Color: R:<span id="red"
             >-</span
           >
-          G:<span id="green">-</span> B:<span id="blue">-</span>
-        </div>
-        <div id="buttons">
-          <button id="processBtn">Process</button>
-          <button id="creditsBtn">Credits</button>
+          G:<span id="green">-</span> B:<span id="blue">-</span></span>
+          <button id="processBtn" type="button">Process</button>
+          <button id="creditsBtn" type="button">Credits</button>
         </div>
       </div>
     </div>
-    <div id="loading">Loading pixels...</div>
+    <div id="loading" class="hidden">Loading pixels...</div>
+    <div id="touch" class="hidden">Draw with 1 finger, scroll with 2 fingers</div>
   </body>
 </html>
