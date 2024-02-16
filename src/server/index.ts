@@ -4,6 +4,7 @@ import path, { extname } from 'path';
 import multer from 'multer';
 import compression from 'compression';
 import fs from 'fs';
+import helmet from 'helmet';
 
 import { SocketServer } from './socket';
 import { Canvas } from './canvas';
@@ -69,7 +70,9 @@ async function main() {
 
   socketServer.init();
 
+  app.disable('x-powered-by');
   app.use(compression());
+  app.use(helmet());
 
   app.get('/admin', authenticate, (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'admin.html'));
@@ -110,7 +113,7 @@ async function main() {
 
   app.use(express.static(path.join(__dirname, 'public')));
 
-  app.use('/static', express.static(path.join('../', __dirname, 'static')));
+  app.use(express.static(path.join(__dirname, '../', 'static')));
 
   app.get('/api/data', async (_, res) => {
     if (process.env.NODE_ENV === 'development') {
