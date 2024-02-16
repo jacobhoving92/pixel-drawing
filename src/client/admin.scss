@@ -29,9 +29,13 @@ header {
 
 main {
   display: grid;
+  gap: 2em;
+  grid-template-columns: max-content max-content;
+}
+
+section {
+  display: grid;
   gap: 1em;
-  align-content: flex-start;
-  justify-items: flex-start;
 }
 
 .block {
@@ -49,4 +53,9 @@ main {
 
 .visible {
   display: block !important;
+}
+
+aside .block {
+  background: #fafafa;
+  color: #555;
 }

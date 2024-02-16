@@ -14,28 +14,50 @@
       </header>
 
       <main>
-        <div class="block">
-          <strong>Erasing</strong>
-          <div>Keep in mind that erasing will shift all colors.</div>
-          <a href="/erase">Eraser</a>
-          <button id="clear" type="button">Clear canvas</button>
-        </div>
-        <div class="block">
-          <strong>Backup</strong>
-          <a id="download" href="/api/download" download>Download canvas data</a>
-        </div>
-        <form
-          id="uploadForm"
-          class="block"
-        >
-          <strong>Upload JSON canvas data</strong>
-          <div>This will replace all current canvas data.</div>
-          <div id="error">Unknown error occured</div>
-          <div>
-            <input type="file" id="file" name="file" accept="application/JSON"  />
+        <section>
+          <div class="block">
+            <strong>Erasing</strong>
+            <div>Keep in mind that erasing will shift all colors.</div>
+            <a href="/erase">Eraser</a>
+            <button id="clear" type="button">Clear canvas</button>
           </div>
-            <button id="uploadBtn" type="submit">Upload file</button>
-        </form>
+          <div class="block">
+            <strong>Backup</strong>
+            <a id="download" href="/api/download" download>Download canvas data</a>
+          </div>
+          <form
+            id="uploadForm"
+            class="block"
+          >
+            <strong>Upload JSON canvas data</strong>
+            <div>This will replace all current canvas data.</div>
+            <div id="error">Unknown error occured</div>
+            <div>
+              <input type="file" id="file" name="file" accept="application/JSON"  />
+            </div>
+              <button id="uploadBtn" type="submit">Upload file</button>
+          </form>
+        </section>
+        <aside>
+          <div class="block">
+            <strong>Keyboard shortcuts</strong>
+            <div>
+              <strong>p</strong>: Toggle process mode
+            </div>
+            <div>
+              <strong>d</strong>: Toggle demo mode (scroll back to return position after timeout)
+            </div>
+            <div>
+              <strong>t</strong>: Set demo mode return position
+            </div>
+            <div>
+              <strong>s</strong>: Save the current position in URL (reload continues at that position)
+            </div>
+            <div>
+              <strong>g</strong>: Toggle large type
+            </div>
+          </div>
+        </aside>
       </main>
     </div>
 
