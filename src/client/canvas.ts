@@ -122,18 +122,19 @@ export function Canvas(containerEl: HTMLElement | null) {
   }
 
   function animate(cb?: () => void, onUpdate?: (counter: number) => void) {
+    let runToLength = backupData.length - 1;
     function innerAnimate() {
       for (let i = 0; i < speed; i++) {
-        if (counter < backupData.length - 1) {
+        if (counter < runToLength) {
           drawPixel(backupData[counter], counter);
           counter++;
         }
-        if (onUpdate) onUpdate(counter);
       }
 
       swapBuffer();
 
-      if (animating && counter < backupData.length - 1) {
+      if (animating && counter < runToLength) {
+        if (onUpdate) onUpdate(counter);
         window.requestAnimationFrame(innerAnimate);
       } else {
         if (cb) cb();

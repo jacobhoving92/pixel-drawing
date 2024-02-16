@@ -8,7 +8,10 @@
 
 html,
 body {
+  width: 4096px;
+  height: 4096px;
   touch-action: none;
+  user-select: none;
 }
 
 body {
@@ -93,6 +96,7 @@ button {
 
 #canvas {
   touch-action: none;
+  user-select: none;
 }
 
 canvas {
@@ -102,6 +106,7 @@ canvas {
   image-rendering: pixelated;
   image-rendering: crisp-edges;
   touch-action: none;
+  user-select: none;
 }
 
 #touch {
