@@ -110,6 +110,8 @@ async function main() {
 
   app.use(express.static(path.join(__dirname, 'public')));
 
+  app.use('/static', express.static(path.join('../', __dirname, 'static')));
+
   app.get('/api/data', async (_, res) => {
     if (process.env.NODE_ENV === 'development') {
       res.setHeader('Access-Control-Allow-Origin', '*');
