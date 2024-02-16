@@ -1,7 +1,5 @@
 import { Canvas, Coordinate, getIndexFromCoordinate } from './canvas';
-import './reset.scss';
 import { Socket } from './socket';
-import './styles.scss';
 
 const setLoading = (loading: boolean) => {
   const loadingEl = document.getElementById('loading');
