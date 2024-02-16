@@ -38,7 +38,6 @@ export function Canvas(containerEl: HTMLElement | null) {
 
   function drawPixel(coordinateIndex: number, pixelsDrawnCount: number) {
     const index = 4 * coordinateIndex;
-    if (data[index + 3] !== 0) return;
 
     const color = getColor(pixelsDrawnCount);
 
