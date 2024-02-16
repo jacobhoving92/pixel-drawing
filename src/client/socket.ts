@@ -4,7 +4,7 @@ export function Socket({
   onMessage,
 }: {
   hostname: string;
-  onOpen?: () => void;
+  onOpen?: (s?: WebSocket) => void;
   onMessage?: (message: string) => void;
 }) {
   const scheme = window.location.protocol === 'https:' ? 'wss' : 'ws';
@@ -18,7 +18,7 @@ export function Socket({
     socket.addEventListener('open', () => {
       console.log('connected');
       timeout = 250;
-      if (onOpen) onOpen();
+      if (onOpen) onOpen(socket);
     });
 
     socket.addEventListener('error', () => {

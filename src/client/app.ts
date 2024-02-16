@@ -1,77 +1,86 @@
 import { Canvas, Coordinate, getIndexFromCoordinate } from './canvas';
-import './reset.scss';
 import { Socket } from './socket';
+import { UI } from './ui';
+
+import './reset.scss';
 import './styles.scss';
 
-const setLoading = (loading: boolean) => {
-  const loadingEl = document.getElementById('loading');
-  const textEl = document.getElementById('text-container');
-
-  if (loadingEl) loadingEl.style.display = loading ? 'flex' : 'none';
-  if (textEl) textEl.style.display = !loading ? 'flex' : 'none';
-};
-
-const toggleCredits = () => {
-  const creditsEl = document.getElementById('credits');
-  if (creditsEl)
-    creditsEl.style.display =
-      creditsEl.style.display === 'none' ? 'flex' : 'none';
-};
-
-const credistBtn = document.getElementById('creditsBtn');
-if (credistBtn) credistBtn.addEventListener('click', toggleCredits);
+let previewDrawnCount = 0;
 
 const canvas = Canvas(document.getElementById('canvas'));
-
-// UPDATE INFO TEXT
-
-const pixelsDrawnEl = document.getElementById('pixelsDrawn');
-const pixelsRemainingEl = document.getElementById('pixelsRemaining');
-const rEl = document.getElementById('red');
-const gEl = document.getElementById('green');
-const bEl = document.getElementById('blue');
-
-function updateUI(pixelsDrawnCount: number) {
-  if (pixelsDrawnEl) pixelsDrawnEl.textContent = `${pixelsDrawnCount}`;
-  if (pixelsRemainingEl)
-    pixelsRemainingEl.textContent = `${canvas.totalPixels - pixelsDrawnCount}`;
-  const color = canvas.getColor(pixelsDrawnCount);
-  if (rEl) rEl.textContent = `${color.r}`;
-  if (gEl) gEl.textContent = `${color.g}`;
-  if (bEl) bEl.textContent = `${color.b}`;
-}
+const ui = UI(canvas);
 
 // ADD SOCKET LISTENERS
 const hostname =
   process.env.NODE_ENV === 'production'
     ? window.location.hostname + `:${window.location.port}`
-    : '0.0.0.0:3000';
+    : 'iviviv-mbp.local:3000';
 
 const socket = Socket({
   hostname,
   onOpen: () => {
+    ui.setLoading(true);
     fetch(window.location.protocol + '//' + hostname + '/api/data')
       .then(async (res) => {
         return await res.json();
       })
       .then((data: number[]) => {
         canvas.drawData(data);
-        setLoading(false);
-        updateUI(data.length);
+        ui.setLoading(false);
+        ui.updateText(data.length);
+        previewDrawnCount = data.length;
+        if (processMode) ui.loopProcess();
       });
   },
   onMessage: (message) => {
-    const [coordinateIndex, pixelsDrawnCount] = JSON.parse(message) as [
+    const [coordinateIndex, pixelsDrawnCount, owner] = JSON.parse(message) as [
+      string,
       number,
       number,
     ];
-    canvas.drawImmediate(coordinateIndex, pixelsDrawnCount);
-    updateUI(pixelsDrawnCount);
+    canvas.drawImmediate(parseInt(coordinateIndex, 10), pixelsDrawnCount, true);
+    ui.updateText(pixelsDrawnCount);
+    if (owner !== 1) previewDrawnCount = pixelsDrawnCount;
   },
 });
 
-// ACTUAL MOUSE/TOUCH DRAWING
+// PROCESS MODE
+let processMode = window.location.search === '?process';
+function toggleProcessMode() {
+  processMode = window.location.search === '?process';
+  window.location.search = processMode ? '' : 'process';
+  if (!processMode) {
+    ui.loopProcess();
+  } else {
+    ui.stopAnimation();
+  }
+}
 
+// DEMO MODE
+let demoMode = window.location.search === '?demo';
+let demoTimer: number;
+let demoTime = 1000 * 15; // 15 seconds
+let demoX = 0;
+let demoY = 0;
+
+function toggleDemoMode() {
+  demoMode = window.location.search === '?demo';
+  window.location.search = demoMode ? '' : 'demo';
+}
+
+function checkDemoTimer() {
+  if (!demoMode) return;
+  clearTimeout(demoTimer);
+  demoTimer = window.setTimeout(() => {
+    window.scrollTo({ top: demoY, left: demoX, behavior: 'smooth' });
+  }, demoTime);
+}
+
+window.addEventListener('scroll', () => {
+  checkDemoTimer();
+});
+
+// ACTUAL MOUSE/TOUCH DRAWING
 const lastAsks: number[] = [];
 
 function checkLastAsks(coordinateIndex: number) {
@@ -84,13 +93,19 @@ function updateLastAsks(coordinateIndex: number) {
 }
 
 window.addEventListener('mousemove', (ev) => {
+  if (ui.isAnimating()) return;
   const coordinate = [Math.floor(ev.pageX), Math.floor(ev.pageY)] as Coordinate;
   const coordinateIndex = getIndexFromCoordinate(coordinate);
   if (canvas.pixelEmpty(coordinateIndex) && checkLastAsks(coordinateIndex)) {
     socket.send(JSON.stringify(coordinateIndex));
+    previewDrawnCount += 1;
+    canvas.drawImmediate(coordinateIndex, previewDrawnCount);
   }
   updateLastAsks(coordinateIndex);
+  checkDemoTimer();
 });
+
+// TOUCH EVENTS
 
 type Coords = {
   x: number;
@@ -99,8 +114,8 @@ type Coords = {
 let tpCache: Touch[] = [];
 
 const midpoint = ([t1, t2]: Touch[]): Coords => ({
-  x: (t1.clientX + t2.clientX) / 2,
-  y: (t1.clientY + t2.clientY) / 2,
+  x: Math.round((t1.pageX + t2.pageX) / 2),
+  y: Math.round((t1.pageY + t2.pageY) / 2),
 });
 
 let initialWindowX = window.scrollX;
@@ -112,83 +127,89 @@ let maxTranslateY = window.innerHeight;
 
 window.addEventListener('touchstart', (ev) => {
   ev.preventDefault();
-  initialWindowX = window.scrollX;
-  initialWindowY = window.scrollY;
-  if (ev.targetTouches.length === 2) {
-    for (let i = 0; i < ev.targetTouches.length; i++) {
-      tpCache.push(ev.targetTouches[i]);
+  ui.checkTouchMessage();
+
+  if (ev.touches.length === 2) {
+    initialWindowX = window.scrollX;
+    initialWindowY = window.scrollY;
+    for (let i = 0; i < ev.touches.length; i++) {
+      tpCache.push(ev.touches[i]);
     }
   }
 });
 
+window.addEventListener(
+  'touchend',
+  (ev) => {
+    if (!(ev.target instanceof HTMLButtonElement)) ev.preventDefault();
+  },
+  { passive: false },
+);
+
 function handlePan(ev: TouchEvent) {
-  if (ev.targetTouches.length === 2) {
-    // && ev.changedTouches.length === 2
+  if (ev.touches.length === 2) {
     const point1 = tpCache.findLastIndex(
-      (tp) => tp.identifier === ev.targetTouches[0].identifier,
+      (tp) => tp.identifier === ev.touches[0].identifier,
     );
     const point2 = tpCache.findLastIndex(
-      (tp) => tp.identifier === ev.targetTouches[1].identifier,
+      (tp) => tp.identifier === ev.touches[1].identifier,
     );
 
     if (point1 >= 0 && point2 >= 0) {
       const initialMidpoint = midpoint([tpCache[point1], tpCache[point2]]);
-      const currentMidpoint = midpoint([
-        ev.targetTouches[0],
-        ev.targetTouches[1],
-      ]);
+      const currentMidpoint = midpoint([ev.touches[0], ev.touches[1]]);
+
+      const midPointX = currentMidpoint.x - initialMidpoint.x;
+      const midPointY = currentMidpoint.y - initialMidpoint.y;
 
       const translation = {
-        x: Math.max(
-          -maxTranslateX,
-          Math.min(maxTranslateX, currentMidpoint.x - initialMidpoint.x),
-        ),
-        y: Math.max(
-          -maxTranslateY,
-          Math.min(maxTranslateY, currentMidpoint.y - initialMidpoint.y),
-        ),
+        x: Math.max(-maxTranslateX, Math.min(maxTranslateX, midPointX)),
+        y: Math.max(-maxTranslateY, Math.min(maxTranslateY, midPointY)),
       };
 
-      window.scrollTo(
-        Math.max(0, Math.min(maxX, initialWindowX - translation.x)),
-        Math.max(0, Math.min(maxY, initialWindowY - translation.y)),
-      );
+      const left = Math.max(0, Math.min(maxX, initialWindowX - translation.x));
+      const top = Math.max(0, Math.min(maxY, initialWindowY - translation.y));
+
+      window.scrollTo({
+        left,
+        top,
+        behavior: 'instant',
+      });
+
+      initialWindowX = left;
+      initialWindowY = top;
     }
   } else {
     tpCache = [];
   }
 }
 
-window.addEventListener('resize', () => {
-  maxX = 4096 - window.innerWidth;
-  maxY = 4096 - window.innerHeight;
-  maxTranslateX = window.innerWidth;
-  maxTranslateY = window.innerHeight;
-});
-
-window.addEventListener('touchmove', (ev) => {
-  ev.preventDefault();
-  if (ev.touches.length === 1) {
-    const coordinate = [
-      Math.floor(ev.touches[0].pageX),
-      Math.floor(ev.touches[0].pageY),
-    ] as Coordinate;
-    const coordinateIndex = getIndexFromCoordinate(coordinate);
-    if (canvas.pixelEmpty(coordinateIndex) && checkLastAsks(coordinateIndex)) {
-      socket.send(JSON.stringify(coordinateIndex));
+window.addEventListener(
+  'touchmove',
+  (ev) => {
+    ev.preventDefault();
+    if (ev.touches.length === 1) {
+      if (ui.isAnimating()) return;
+      const coordinate = [
+        Math.floor(ev.touches[0].pageX),
+        Math.floor(ev.touches[0].pageY),
+      ] as Coordinate;
+      const coordinateIndex = getIndexFromCoordinate(coordinate);
+      if (
+        canvas.pixelEmpty(coordinateIndex) &&
+        checkLastAsks(coordinateIndex)
+      ) {
+        socket.send(JSON.stringify(coordinateIndex));
+        previewDrawnCount += 1;
+        canvas.drawImmediate(coordinateIndex, previewDrawnCount);
+      }
+      updateLastAsks(coordinateIndex);
     }
-    updateLastAsks(coordinateIndex);
-    return;
-  }
 
-  if (ev.touches.length === 2 && ev.targetTouches.length === 2) {
     handlePan(ev);
-  }
-});
-
-window.addEventListener('touchend', (ev) => {
-  ev.preventDefault();
-});
+  },
+  { passive: false },
+);
 
 // SCROLL COORDINATES
 
@@ -198,11 +219,44 @@ function scrollFromHash() {
   if (split.length === 2) {
     const coordinate = split.map((v) => parseInt(v, 10));
     window.scrollTo(coordinate[0], coordinate[1]);
+  } else {
+    // scroll to random position
+    window.scrollTo(Math.random() * maxX, Math.random() * maxY);
   }
 }
 
 window.addEventListener('hashchange', () => {
   scrollFromHash();
+});
+
+window.addEventListener('resize', () => {
+  maxX = 4096 - window.innerWidth;
+  maxY = 4096 - window.innerHeight;
+  maxTranslateX = window.innerWidth;
+  maxTranslateY = window.innerHeight;
+});
+
+window.addEventListener('keyup', (ev) => {
+  switch (ev.key) {
+    case 'p':
+      toggleProcessMode();
+      return;
+    case 'd':
+      toggleDemoMode();
+      return;
+    case 't':
+      if (!demoMode) return;
+      demoX = window.scrollX;
+      demoY = window.scrollY;
+      return;
+    case 's':
+      // Save the current position to URL
+      window.location.hash = `${window.scrollX},${window.scrollY}`;
+      return;
+    case 'g':
+      document.body.classList.toggle('largeType');
+      return;
+  }
 });
 
 scrollFromHash();
