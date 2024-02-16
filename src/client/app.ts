@@ -76,9 +76,7 @@ function checkDemoTimer() {
   }, demoTime);
 }
 
-window.addEventListener('scroll', () => {
-  checkDemoTimer();
-});
+if (demoMode) window.addEventListener('scroll', checkDemoTimer);
 
 // ACTUAL MOUSE/TOUCH DRAWING
 const lastAsks: number[] = [];
@@ -128,12 +126,14 @@ let maxTranslateY = window.innerHeight;
 window.addEventListener('touchstart', (ev) => {
   ev.preventDefault();
   ui.checkTouchMessage();
+});
 
-  if (ev.touches.length === 2) {
+canvas.canvas.addEventListener('touchstart', (ev) => {
+  if (ev.targetTouches.length === 2) {
     initialWindowX = window.scrollX;
     initialWindowY = window.scrollY;
-    for (let i = 0; i < ev.touches.length; i++) {
-      tpCache.push(ev.touches[i]);
+    for (let i = 0; i < ev.targetTouches.length; i++) {
+      tpCache.push(ev.targetTouches[i]);
     }
   }
 });
@@ -147,17 +147,20 @@ window.addEventListener(
 );
 
 function handlePan(ev: TouchEvent) {
-  if (ev.touches.length === 2) {
+  if (ev.targetTouches.length === 2) {
     const point1 = tpCache.findLastIndex(
-      (tp) => tp.identifier === ev.touches[0].identifier,
+      (tp) => tp.identifier === ev.targetTouches[0].identifier,
     );
     const point2 = tpCache.findLastIndex(
-      (tp) => tp.identifier === ev.touches[1].identifier,
+      (tp) => tp.identifier === ev.targetTouches[1].identifier,
     );
 
     if (point1 >= 0 && point2 >= 0) {
       const initialMidpoint = midpoint([tpCache[point1], tpCache[point2]]);
-      const currentMidpoint = midpoint([ev.touches[0], ev.touches[1]]);
+      const currentMidpoint = midpoint([
+        ev.targetTouches[0],
+        ev.targetTouches[1],
+      ]);
 
       const midPointX = currentMidpoint.x - initialMidpoint.x;
       const midPointY = currentMidpoint.y - initialMidpoint.y;
@@ -184,15 +187,15 @@ function handlePan(ev: TouchEvent) {
   }
 }
 
-window.addEventListener(
+canvas.canvas.addEventListener(
   'touchmove',
   (ev) => {
     ev.preventDefault();
-    if (ev.touches.length === 1) {
+    if (ev.targetTouches.length === 1) {
       if (ui.isAnimating()) return;
       const coordinate = [
-        Math.floor(ev.touches[0].pageX),
-        Math.floor(ev.touches[0].pageY),
+        Math.floor(ev.targetTouches[0].pageX),
+        Math.floor(ev.targetTouches[0].pageY),
       ] as Coordinate;
       const coordinateIndex = getIndexFromCoordinate(coordinate);
       if (
