@@ -111,7 +111,7 @@ type Coords = {
 };
 let tpCache: Touch[] = [];
 
-const midpoint = ([t1, t2]: Touch[]): Coords => ({
+const midpoint = (t1: Touch, t2: Touch): Coords => ({
   x: Math.round((t1.pageX + t2.pageX) / 2),
   y: Math.round((t1.pageY + t2.pageY) / 2),
 });
@@ -148,40 +148,45 @@ window.addEventListener(
 
 function handlePan(ev: TouchEvent) {
   if (ev.targetTouches.length === 2) {
-    const point1 = tpCache.findLastIndex(
-      (tp) => tp.identifier === ev.targetTouches[0].identifier,
-    );
-    const point2 = tpCache.findLastIndex(
-      (tp) => tp.identifier === ev.targetTouches[1].identifier,
-    );
+    window.requestAnimationFrame(() => {
+      const point1 = tpCache.findLastIndex(
+        (tp) => tp.identifier === ev.targetTouches[0].identifier,
+      );
+      const point2 = tpCache.findLastIndex(
+        (tp) => tp.identifier === ev.targetTouches[1].identifier,
+      );
 
-    if (point1 >= 0 && point2 >= 0) {
-      const initialMidpoint = midpoint([tpCache[point1], tpCache[point2]]);
-      const currentMidpoint = midpoint([
-        ev.targetTouches[0],
-        ev.targetTouches[1],
-      ]);
+      if (point1 >= 0 && point2 >= 0) {
+        const initialMidpoint = midpoint(tpCache[point1], tpCache[point2]);
+        const currentMidpoint = midpoint(
+          ev.targetTouches[0],
+          ev.targetTouches[1],
+        );
 
-      const midPointX = currentMidpoint.x - initialMidpoint.x;
-      const midPointY = currentMidpoint.y - initialMidpoint.y;
+        const midPointX = currentMidpoint.x - initialMidpoint.x;
+        const midPointY = currentMidpoint.y - initialMidpoint.y;
 
-      const translation = {
-        x: Math.max(-maxTranslateX, Math.min(maxTranslateX, midPointX)),
-        y: Math.max(-maxTranslateY, Math.min(maxTranslateY, midPointY)),
-      };
+        const translation = {
+          x: Math.max(-maxTranslateX, Math.min(maxTranslateX, midPointX)),
+          y: Math.max(-maxTranslateY, Math.min(maxTranslateY, midPointY)),
+        };
 
-      const left = Math.max(0, Math.min(maxX, initialWindowX - translation.x));
-      const top = Math.max(0, Math.min(maxY, initialWindowY - translation.y));
+        const left = Math.max(
+          0,
+          Math.min(maxX, initialWindowX - translation.x),
+        );
+        const top = Math.max(0, Math.min(maxY, initialWindowY - translation.y));
 
-      window.scrollTo({
-        left,
-        top,
-        behavior: 'instant',
-      });
+        window.scrollTo({
+          left,
+          top,
+          behavior: 'instant',
+        });
 
-      initialWindowX = left;
-      initialWindowY = top;
-    }
+        initialWindowX = left;
+        initialWindowY = top;
+      }
+    });
   } else {
     tpCache = [];
   }
@@ -219,6 +224,7 @@ canvas.canvas.addEventListener(
 function scrollFromHash() {
   const hash = window.location.hash.replace('#', '');
   const split = hash.split(',');
+
   if (split.length === 2) {
     const coordinate = split.map((v) => parseInt(v, 10));
     window.scrollTo(coordinate[0], coordinate[1]);
