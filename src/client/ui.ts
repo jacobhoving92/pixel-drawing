@@ -61,7 +61,10 @@ export function UI(canvas: Canvas) {
   el.processButton?.addEventListener('click', toggleAnimation);
 
   function checkTouchMessage() {
-    hide(el.touchMessage);
+    if (hasShownTouchMessage) {
+      hide(el.touchMessage);
+      hasShownTouchMessage = false;
+    }
   }
 
   // UPDATE INFO TEXT
