@@ -65,6 +65,7 @@ body {
   left: 50%;
   transform: translate(-50%, -50%);
   pointer-events: none;
+  user-select: none;
 }
 
 button {
@@ -78,6 +79,7 @@ button {
   color: inherit;
   cursor: pointer;
   pointer-events: all !important;
+  user-select: none;
   &.active {
     background-color: black;
     color: white;
@@ -118,6 +120,7 @@ canvas {
   pointer-events: none;
   width: 100%;
   padding: 0 10px;
+  user-select: none;
 }
 
 body.largeType {
