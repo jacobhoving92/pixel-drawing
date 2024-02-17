@@ -102,105 +102,85 @@ window.addEventListener('mousemove', (ev) => {
 
 // TOUCH EVENTS
 
-type Coords = {
-  x: number;
-  y: number;
-};
-let tpCache: Touch[] = [];
+type Coords = [number, number];
 
-const midpoint = (t1: Touch, t2: Touch): Coords => ({
-  x: Math.round((t1.pageX + t2.pageX) / 2),
-  y: Math.round((t1.pageY + t2.pageY) / 2),
-});
+const midpoint = (t1: Touch, t2: Touch): Coords => [
+  (t1.clientX + t2.clientX) / 2,
+  (t1.clientY + t2.clientY) / 2,
+];
 
-let initialWindowX = window.scrollX;
-let initialWindowY = window.scrollY;
+export function getCentroid(touchEvents: TouchList): [number, number] {
+  const length = touchEvents.length;
+  let clientX = 0;
+  let clientY = 0;
+  for (let i = 0; i < length; i++) {
+    clientX += touchEvents[i].pageX;
+    clientY += touchEvents[i].pageY;
+  }
+  return [clientX / length, clientY / length];
+}
+
 let maxX = 4096 - window.innerWidth;
 let maxY = 4096 - window.innerHeight;
-let maxTranslateX = window.innerWidth;
-let maxTranslateY = window.innerHeight;
 
 document.addEventListener('gesturestart', (e) => e.preventDefault());
 document.addEventListener('gesturechange', (e) => e.preventDefault());
 
-window.addEventListener(
-  'touchstart',
-  (ev) => {
-    ev.preventDefault();
-    ui.checkTouchMessage();
-  },
-  { passive: false },
-);
+window.addEventListener('touchstart', (ev) => {
+  ev.preventDefault();
+  ui.checkTouchMessage();
+});
 
-canvas.canvas.addEventListener(
-  'touchstart',
-  (ev) => {
-    ev.preventDefault();
-    if (ev.targetTouches.length === 2) {
-      initialWindowX = window.scrollX;
-      initialWindowY = window.scrollY;
-      for (let i = 0; i < ev.targetTouches.length; i++) {
-        tpCache.push(ev.targetTouches[i]);
-      }
-    }
-  },
-  { passive: false },
-);
+let lastCentroid: Coords | null = null;
+let lastTouchCount = 0;
+canvas.canvas.addEventListener('touchstart', (ev) => {
+  ev.preventDefault();
+  if (ev.touches.length > 1) {
+    lastCentroid = null;
+  }
+});
 
 window.addEventListener('touchend', (ev) => {
   if (!(ev.target instanceof HTMLButtonElement)) ev.preventDefault();
 });
 
+canvas.canvas.addEventListener('touchend', (ev) => {
+  if (ev.touches.length < 2) {
+    lastCentroid = null;
+  }
+});
+
 function handlePan(ev: TouchEvent) {
-  if (ev.targetTouches.length === 2) {
-    const point1 = tpCache.findLastIndex(
-      (tp) => tp.identifier === ev.targetTouches[0].identifier,
-    );
-    const point2 = tpCache.findLastIndex(
-      (tp) => tp.identifier === ev.targetTouches[1].identifier,
-    );
+  const centroid = getCentroid(ev.touches);
+  const touchCount = ev.touches.length;
+  if (lastTouchCount === touchCount) {
+    if (lastCentroid) {
+      const dX = lastCentroid[0] - centroid[0];
+      const dY = lastCentroid[1] - centroid[1];
 
-    if (point1 >= 0 && point2 >= 0) {
-      const initialMidpoint = midpoint(tpCache[point1], tpCache[point2]);
-      const currentMidpoint = midpoint(
-        ev.targetTouches[0],
-        ev.targetTouches[1],
-      );
-
-      const midPointX = currentMidpoint.x - initialMidpoint.x;
-      const midPointY = currentMidpoint.y - initialMidpoint.y;
-
-      const translation = {
-        x: Math.max(-maxTranslateX, Math.min(maxTranslateX, midPointX)),
-        y: Math.max(-maxTranslateY, Math.min(maxTranslateY, midPointY)),
-      };
-
-      const left = Math.max(0, Math.min(maxX, initialWindowX - translation.x));
-      const top = Math.max(0, Math.min(maxY, initialWindowY - translation.y));
+      const left = Math.max(0, Math.min(maxX, window.scrollX + dX));
+      const top = Math.max(0, Math.min(maxY, window.scrollY + dY));
 
       window.scrollTo({
         left,
         top,
         behavior: 'instant',
       });
-
-      initialWindowX = left;
-      initialWindowY = top;
     }
-  } else {
-    tpCache = [];
   }
+  lastCentroid = centroid;
+  lastTouchCount = touchCount;
 }
 
 canvas.canvas.addEventListener(
   'touchmove',
   (ev) => {
     ev.preventDefault();
-    if (ev.targetTouches.length === 1) {
+    if (ev.touches.length === 1) {
       if (ui.isAnimating()) return;
       const coordinate = [
-        Math.floor(ev.targetTouches[0].pageX),
-        Math.floor(ev.targetTouches[0].pageY),
+        Math.floor(ev.touches[0].pageX),
+        Math.floor(ev.touches[0].pageY),
       ] as Coordinate;
       const coordinateIndex = getIndexFromCoordinate(coordinate);
       if (
@@ -212,6 +192,7 @@ canvas.canvas.addEventListener(
         canvas.drawImmediate(coordinateIndex, previewDrawnCount);
       }
       updateLastAsks(coordinateIndex);
+      return;
     }
 
     handlePan(ev);
@@ -240,8 +221,6 @@ window.addEventListener('hashchange', () => {
 window.addEventListener('resize', () => {
   maxX = 4096 - window.innerWidth;
   maxY = 4096 - window.innerHeight;
-  maxTranslateX = window.innerWidth;
-  maxTranslateY = window.innerHeight;
 });
 
 window.addEventListener('keyup', (ev) => {
