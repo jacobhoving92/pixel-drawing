@@ -120,16 +120,23 @@ let maxY = 4096 - window.innerHeight;
 let maxTranslateX = window.innerWidth;
 let maxTranslateY = window.innerHeight;
 
-window.addEventListener('touchstart', (ev) => {
-  ev.preventDefault();
-  ui.checkTouchMessage();
-});
+document.addEventListener('gesturestart', (e) => e.preventDefault());
+document.addEventListener('gesturechange', (e) => e.preventDefault());
+
+window.addEventListener(
+  'touchstart',
+  (ev) => {
+    ev.preventDefault();
+    ui.checkTouchMessage();
+  },
+  { passive: false },
+);
 
 canvas.canvas.addEventListener(
   'touchstart',
   (ev) => {
+    ev.preventDefault();
     if (ev.targetTouches.length === 2) {
-      ev.preventDefault();
       initialWindowX = window.scrollX;
       initialWindowY = window.scrollY;
       for (let i = 0; i < ev.targetTouches.length; i++) {
@@ -137,60 +144,49 @@ canvas.canvas.addEventListener(
       }
     }
   },
-  {
-    passive: false,
-  },
-);
-
-window.addEventListener(
-  'touchend',
-  (ev) => {
-    if (!(ev.target instanceof HTMLButtonElement)) ev.preventDefault();
-  },
   { passive: false },
 );
 
+window.addEventListener('touchend', (ev) => {
+  if (!(ev.target instanceof HTMLButtonElement)) ev.preventDefault();
+});
+
 function handlePan(ev: TouchEvent) {
   if (ev.targetTouches.length === 2) {
-    window.requestAnimationFrame(() => {
-      const point1 = tpCache.findLastIndex(
-        (tp) => tp.identifier === ev.targetTouches[0].identifier,
+    const point1 = tpCache.findLastIndex(
+      (tp) => tp.identifier === ev.targetTouches[0].identifier,
+    );
+    const point2 = tpCache.findLastIndex(
+      (tp) => tp.identifier === ev.targetTouches[1].identifier,
+    );
+
+    if (point1 >= 0 && point2 >= 0) {
+      const initialMidpoint = midpoint(tpCache[point1], tpCache[point2]);
+      const currentMidpoint = midpoint(
+        ev.targetTouches[0],
+        ev.targetTouches[1],
       );
-      const point2 = tpCache.findLastIndex(
-        (tp) => tp.identifier === ev.targetTouches[1].identifier,
-      );
 
-      if (point1 >= 0 && point2 >= 0) {
-        const initialMidpoint = midpoint(tpCache[point1], tpCache[point2]);
-        const currentMidpoint = midpoint(
-          ev.targetTouches[0],
-          ev.targetTouches[1],
-        );
+      const midPointX = currentMidpoint.x - initialMidpoint.x;
+      const midPointY = currentMidpoint.y - initialMidpoint.y;
 
-        const midPointX = currentMidpoint.x - initialMidpoint.x;
-        const midPointY = currentMidpoint.y - initialMidpoint.y;
+      const translation = {
+        x: Math.max(-maxTranslateX, Math.min(maxTranslateX, midPointX)),
+        y: Math.max(-maxTranslateY, Math.min(maxTranslateY, midPointY)),
+      };
 
-        const translation = {
-          x: Math.max(-maxTranslateX, Math.min(maxTranslateX, midPointX)),
-          y: Math.max(-maxTranslateY, Math.min(maxTranslateY, midPointY)),
-        };
+      const left = Math.max(0, Math.min(maxX, initialWindowX - translation.x));
+      const top = Math.max(0, Math.min(maxY, initialWindowY - translation.y));
 
-        const left = Math.max(
-          0,
-          Math.min(maxX, initialWindowX - translation.x),
-        );
-        const top = Math.max(0, Math.min(maxY, initialWindowY - translation.y));
+      window.scrollTo({
+        left,
+        top,
+        behavior: 'instant',
+      });
 
-        window.scrollTo({
-          left,
-          top,
-          behavior: 'instant',
-        });
-
-        initialWindowX = left;
-        initialWindowY = top;
-      }
-    });
+      initialWindowX = left;
+      initialWindowY = top;
+    }
   } else {
     tpCache = [];
   }
@@ -262,7 +258,6 @@ window.addEventListener('keyup', (ev) => {
       demoY = window.scrollY;
       return;
     case 's':
-      // Save the current position to URL
       window.location.hash = `${window.scrollX},${window.scrollY}`;
       return;
     case 'g':
