@@ -23,19 +23,15 @@ export function Canvas(containerEl: HTMLElement | null) {
   if (!context) throw new Error('Could not create canvas context!');
 
   context.imageSmoothingEnabled = false;
-  // context.fillStyle = 'white';
   context.clearRect(0, 0, canvas.width, canvas.height);
   let image = context.createImageData(canvas.width, canvas.height);
   let data = image.data;
-  // let buffer = new Uint32Array(data.buffer);
 
   function clearCanvas() {
     if (!context) throw new Error('Could not create canvas context!');
-    // context.fillStyle = 'white';
     context.clearRect(0, 0, canvas.width, canvas.height);
     image = context.createImageData(canvas.width, canvas.height);
     data = image.data;
-    // buffer = new Uint32Array(data.buffer);
   }
 
   function drawPixelToBuffer(
@@ -72,9 +68,6 @@ export function Canvas(containerEl: HTMLElement | null) {
     // Check if pixel already drawn
     if (!force && data[index + 3] !== 0) return;
     const color = getColor(pixelsDrawnCount);
-    // data[index] = color.r;
-    // data[index + 1] = color.g;
-    // data[index + 2] = color.b;
     data[index + 3] = 255;
 
     pixel.data[0] = color.r;
