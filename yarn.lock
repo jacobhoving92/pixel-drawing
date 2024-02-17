@@ -33,9 +33,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@flydotio/dockerfile@npm:latest":
-  version: 0.5.0
-  resolution: "@flydotio/dockerfile@npm:0.5.0"
+"@flydotio/dockerfile@npm:^0.5.2":
+  version: 0.5.2
+  resolution: "@flydotio/dockerfile@npm:0.5.2"
   dependencies:
     chalk: ^5.3.0
     diff: ^5.1.0
@@ -44,7 +44,7 @@ __metadata:
     yargs: ^17.7.2
   bin:
     dockerfile: index.js
-  checksum: e73017839067094326c7a32466e6ee01c9b1f0521787f303e21591d32cf896ef93e9ea863271b2f4680d3e390ded7782bfb96f779e97bc3a2274cd6debc5969f
+  checksum: 4f99ed171f7b5b72f9e470bca5bad09a57cbd1c147a0e1e888ab8e3e4030aee696bd406b00745851e9b7b7367084e93a92a573b968fc99c42aa37c57c878849f
   languageName: node
   linkType: hard
 
@@ -1359,12 +1359,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:*, @types/node@npm:^20.4.2":
-  version: 20.11.2
-  resolution: "@types/node@npm:20.11.2"
+"@types/node@npm:*, @types/node@npm:^20.11.19":
+  version: 20.11.19
+  resolution: "@types/node@npm:20.11.19"
   dependencies:
     undici-types: ~5.26.4
-  checksum: 28ce6425cd1cc93aac12309c81b986a9fe1be8da6a877bc51ee890ea46174a104177d74c9b7a86907e54cc66917fdb57259b0c8456ec4cabb07faf174e790556
+  checksum: 259d16643ba611ade617a8212e594a3ac014727457507389bbf7213971346ab052d870f1e6e2df0afd0876ecd7874f578bccb130be01e069263cfc7136ddc0c1
   languageName: node
   linkType: hard
 
@@ -2259,7 +2259,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"express@npm:^4.17.3":
+"express@npm:^4.18.2":
   version: 4.18.2
   resolution: "express@npm:4.18.2"
   dependencies:
@@ -2524,13 +2524,6 @@ __metadata:
   dependencies:
     function-bind: ^1.1.2
   checksum: 6151c75ca12554565098641c98a40f4cc86b85b0fd5b6fe92360967e4605a4f9610f7757260b4e8098dd1c2ce7f4b095f2006fe72a570e3b6d2d28de0298c176
-  languageName: node
-  linkType: hard
-
-"helmet@npm:^7.1.0":
-  version: 7.1.0
-  resolution: "helmet@npm:7.1.0"
-  checksum: 16aaa0df997eaa18821e71389bc9ceffeeaa935df98427ede2bb006065f7e02bb1941caabea16d5a93a791cb3fe7d8a760266bc57b3b9ca5dd7da17ea84244b8
   languageName: node
   linkType: hard
 
@@ -3563,7 +3556,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "pixel-drawing@workspace:."
   dependencies:
-    "@flydotio/dockerfile": latest
+    "@flydotio/dockerfile": ^0.5.2
     "@parcel/packager-raw-url": 2.11.0
     "@parcel/transformer-sass": 2.11.0
     "@parcel/transformer-webmanifest": 2.11.0
@@ -3571,19 +3564,18 @@ __metadata:
     "@types/express": ^4.17.21
     "@types/lodash": ^4.14.202
     "@types/multer": ^1.4.11
-    "@types/node": ^20.4.2
+    "@types/node": ^20.11.19
     "@types/ws": ^8.5.10
     buffer: ^5.5.0||^6.0.0
     compression: ^1.7.4
-    express: ^4.17.3
-    helmet: ^7.1.0
+    express: ^4.18.2
     lodash: ^4.17.21
     multer: ^1.4.5-lts.1
     parcel: ^2.11.0
-    prettier: ^3.0.0
+    prettier: ^3.2.5
     redis: ^4.6.12
-    rimraf: ^5.0.1
-    typescript: ^5.1.6
+    rimraf: ^5.0.5
+    typescript: ^5.3.3
     ws: ^8.16.0
   languageName: unknown
   linkType: soft
@@ -3632,12 +3624,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prettier@npm:^3.0.0":
-  version: 3.2.2
-  resolution: "prettier@npm:3.2.2"
+"prettier@npm:^3.2.5":
+  version: 3.2.5
+  resolution: "prettier@npm:3.2.5"
   bin:
     prettier: bin/prettier.cjs
-  checksum: b416e1e4b26c351403343ebe461feda631c0eee5c3cf316c711204a08f3c639f38a8f9177c75e98a690998ff82e8ddc80c6bc027fb4ef6cedb6a4db035b4fe9a
+  checksum: 2ee4e1417572372afb7a13bb446b34f20f1bf1747db77cf6ccaf57a9be005f2f15c40f903d41a6b79eec3f57fff14d32a20fb6dee1f126da48908926fe43c311
   languageName: node
   linkType: hard
 
@@ -3783,7 +3775,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"rimraf@npm:^5.0.1":
+"rimraf@npm:^5.0.5":
   version: 5.0.5
   resolution: "rimraf@npm:5.0.5"
   dependencies:
@@ -4171,7 +4163,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@npm:^5.1.6":
+"typescript@npm:^5.3.3":
   version: 5.3.3
   resolution: "typescript@npm:5.3.3"
   bin:
@@ -4181,7 +4173,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@patch:typescript@^5.1.6#~builtin<compat/typescript>":
+"typescript@patch:typescript@^5.3.3#~builtin<compat/typescript>":
   version: 5.3.3
   resolution: "typescript@patch:typescript@npm%3A5.3.3#~builtin<compat/typescript>::version=5.3.3&hash=77c9e2"
   bin:

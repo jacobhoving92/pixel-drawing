@@ -4,12 +4,26 @@ import path, { extname } from 'path';
 import multer from 'multer';
 import compression from 'compression';
 import fs from 'fs';
-import helmet from 'helmet';
 
 import { SocketServer } from './socket';
 import { Canvas } from './canvas';
 
 const PORT = process.env.PORT || 3000;
+const HEADERS = {
+  'Content-Security-Policy':
+    "default-src 'self';base-uri 'self'; font-src 'self' https: data:;form-action 'self';frame-ancestors 'self';img-src 'self' data:;object-src 'none';script-src 'self';script-src-attr 'none';style-src 'self' https: 'unsafe-inline';upgrade-insecure-requests",
+  'Cross-Origin-Opener-Policy': 'same-origin',
+  'Cross-Origin-Resource-Policy': 'same-origin',
+  'Origin-Agent-Cluster': '?1',
+  'Referrer-Policy': 'no-referrer',
+  'Strict-Transport-Security': 'max-age=15552000; includeSubDomains',
+  'X-Content-Type-Options': 'nosniff',
+  'X-DNS-Prefetch-Control': 'off',
+  'X-Download-Options': 'noopen',
+  'X-Frame-Options': 'SAMEORIGIN',
+  'X-Permitted-Cross-Domain-Policies': 'none',
+  'X-XSS-Protection': '0',
+};
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -29,7 +43,7 @@ const upload = multer({
   limits: {
     fileSize: 100 * 1000 * 1000, // 100 MB
   },
-  fileFilter: (req, file, callback) => {
+  fileFilter: (_, file, callback) => {
     if (!file.originalname.match(/\.(json)$/)) {
       return callback(new Error('Please upload a a JSON file.'));
     }
@@ -71,8 +85,13 @@ async function main() {
   socketServer.init();
 
   app.disable('x-powered-by');
+  if (process.env.NODE_ENV === 'production') {
+    app.use((_, res, next) => {
+      res.set(HEADERS);
+      next();
+    });
+  }
   app.use(compression());
-  app.use(helmet());
 
   app.get('/admin', authenticate, (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'admin.html'));

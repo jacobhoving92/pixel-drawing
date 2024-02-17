@@ -22,16 +22,15 @@
   "license": "MIT",
   "dependencies": {
     "compression": "^1.7.4",
-    "express": "^4.17.3",
-    "helmet": "^7.1.0",
+    "express": "^4.18.2",
     "lodash": "^4.17.21",
     "multer": "^1.4.5-lts.1",
     "redis": "^4.6.12",
-    "rimraf": "^5.0.1",
+    "rimraf": "^5.0.5",
     "ws": "^8.16.0"
   },
   "devDependencies": {
-    "@flydotio/dockerfile": "latest",
+    "@flydotio/dockerfile": "^0.5.2",
     "@parcel/packager-raw-url": "2.11.0",
     "@parcel/transformer-sass": "2.11.0",
     "@parcel/transformer-webmanifest": "2.11.0",
@@ -39,12 +38,12 @@
     "@types/express": "^4.17.21",
     "@types/lodash": "^4.14.202",
     "@types/multer": "^1.4.11",
-    "@types/node": "^20.4.2",
+    "@types/node": "^20.11.19",
     "@types/ws": "^8.5.10",
     "buffer": "^5.5.0||^6.0.0",
     "parcel": "^2.11.0",
-    "prettier": "^3.0.0",
-    "typescript": "^5.1.6"
+    "prettier": "^3.2.5",
+    "typescript": "^5.3.3"
   },
   "browserslist": "> 0.5%, last 2 versions, not dead"
 }
