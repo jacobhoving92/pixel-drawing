@@ -8,31 +8,35 @@ export async function Store() {
   const HKEY = 'pixels';
 
   const client = await createClient({ url: process.env.REDIS_URL || undefined })
-    .on('error', (err) => console.log('Redis Client Error', err))
+    .on('error', (err) => {
+      console.log('Redis Client Error', err);
+      throw new Error('Could not connect to DB');
+    })
     .connect();
 
   const hasValueAtIndex = async (coordinateIndex: string) => {
-    return await client.hExists(HKEY, coordinateIndex);
+    return await client?.hExists(HKEY, coordinateIndex);
   };
 
   const setValueAtIndex = async (coordinateIndex: string) => {
     const hasValue = await hasValueAtIndex(coordinateIndex);
     if (hasValue) return undefined;
-    await client.hSet(HKEY, coordinateIndex, 1);
-    return await client.rPush(KEY, coordinateIndex);
+    await client?.hSet(HKEY, coordinateIndex, 1);
+    return await client?.rPush(KEY, coordinateIndex);
   };
 
   const removeValueAtIndex = async (coordinateIndex: string) => {
-    return await client.lRem(KEY, -1, coordinateIndex);
+    return await client?.lRem(KEY, -1, coordinateIndex);
   };
 
   const getAllValues = async () => {
+    if (!client) return [];
     const length = await client.lLen(KEY);
     const maxSize = 50000;
     const chunkSize = Math.max(1, Math.ceil(length / maxSize));
     const data = await Promise.all(
       range(chunkSize + 1).map((i) =>
-        client.lRange(KEY, i * maxSize, maxSize * (i + 1) - 1),
+        client?.lRange(KEY, i * maxSize, maxSize * (i + 1) - 1),
       ),
     );
 
@@ -40,7 +44,7 @@ export async function Store() {
   };
 
   const reset = async () => {
-    return Promise.all([client.del(KEY), client.del(HKEY)]);
+    return Promise.all([client?.del(KEY), client?.del(HKEY)]);
   };
 
   const setValues = async (values: string[]) => {
@@ -49,13 +53,13 @@ export async function Store() {
       const chunked = chunk(values, 512);
       await Promise.all(
         chunked.map((chunk) => {
-          return client.rPush(KEY, chunk);
+          return client?.rPush(KEY, chunk);
         }),
       );
 
       await Promise.all(
         chunked.map((chunk) => {
-          return client.hSet(HKEY, flatten(chunk.map((k) => [k, 1])));
+          return client?.hSet(HKEY, flatten(chunk.map((k) => [k, 1])));
         }),
       );
       return true;

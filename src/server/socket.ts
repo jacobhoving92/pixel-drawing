@@ -2,7 +2,7 @@ import http from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
 import { CanvasInstance } from './canvas';
 
-export function SocketServer(server: http.Server, canvas: CanvasInstance) {
+export function SocketServer(server: http.Server, canvas?: CanvasInstance) {
   const wss = new WebSocketServer({ server });
 
   return {
@@ -19,9 +19,9 @@ export function SocketServer(server: http.Server, canvas: CanvasInstance) {
             return;
           }
           if (eraseMode) {
-            await canvas.erase(coordinateIndex);
+            await canvas?.erase(coordinateIndex);
           } else {
-            const pixelsDrawnCount = await canvas.draw(coordinateIndex);
+            const pixelsDrawnCount = await canvas?.draw(coordinateIndex);
             // If we get a number, the pixel is saved as drawn, else it the pixel is already set
             if (pixelsDrawnCount) {
               wss.clients.forEach((client) => {

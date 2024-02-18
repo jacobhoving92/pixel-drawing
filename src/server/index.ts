@@ -78,7 +78,10 @@ function isAuthorized(authorization?: string) {
 
 async function main() {
   const app = express();
-  const canvas = await Canvas();
+  const canvas = await Canvas().catch(() => {
+    console.error('Could not create canvas');
+    return undefined;
+  });
   const server = http.createServer(app);
   const socketServer = SocketServer(server, canvas);
 
@@ -103,12 +106,21 @@ async function main() {
 
   app.post('/api/clear', authenticate, (req, res) => {
     console.log('resetting canvas');
-    canvas.reset();
-    res.json({
-      success: true,
-      message: 'Canvas cleared',
-      status: 200,
-    });
+    try {
+      canvas?.reset();
+      res.json({
+        success: true,
+        message: 'Canvas cleared',
+      });
+    } catch (e: any) {
+      console.error(e);
+      res.json(
+        JSON.stringify({
+          error: true,
+          message: e.message ?? 'Could not clear canvas',
+        }),
+      );
+    }
   });
 
   app.post(
@@ -118,12 +130,21 @@ async function main() {
     async (req, res) => {
       if (req.file) {
         console.log('uploading pixel data');
-        const success = await canvas.setFromFile(req.file);
-        res.json({
-          success,
-        });
+        try {
+          const success = await canvas?.setFromFile(req.file);
+          res.json({
+            success,
+          });
+        } catch (e: any) {
+          console.error(e);
+          res.json({
+            error: true,
+            message: e.message ?? 'Could not upload data',
+          });
+        }
       } else {
         res.json({
+          error: true,
           success: false,
         });
       }
@@ -138,16 +159,30 @@ async function main() {
     if (process.env.NODE_ENV === 'development') {
       res.setHeader('Access-Control-Allow-Origin', '*');
     }
-    const data = await canvas.getCurrentData();
-    res.json(data);
+    try {
+      const data = await canvas?.getCurrentData();
+      if (!data) throw new Error('Could not get canvas data');
+      res.json(data);
+    } catch (e: any) {
+      console.error(e);
+      res.json({ error: true, message: e.message ?? 'Could not get data' });
+    }
   });
 
   app.get('/api/download', authenticate, async (_, res) => {
     if (process.env.NODE_ENV === 'development') {
       res.setHeader('Access-Control-Allow-Origin', '*');
     }
-    const data = await canvas.getRawData();
-    res.json(data);
+    try {
+      const data = await canvas?.getRawData();
+      res.json(data);
+    } catch (e: any) {
+      console.error(e);
+      res.json({
+        error: true,
+        message: e.message ?? 'Could not get raw data',
+      });
+    }
   });
 
   server.listen(PORT, () => {
