@@ -30,6 +30,7 @@ export function UI(canvas: Canvas) {
     textContainer: document.getElementById('text-container'),
     pixelsDrawn: document.getElementById('pixelsDrawn'),
     pixelsRemaining: document.getElementById('pixelsRemaining'),
+    error: document.getElementById('error'),
     r: document.getElementById('red'),
     g: document.getElementById('green'),
     b: document.getElementById('blue'),
@@ -69,6 +70,7 @@ export function UI(canvas: Canvas) {
 
   // UPDATE INFO TEXT
   function updateText(pixelsDrawnCount: number, force?: boolean) {
+    if (isNaN(pixelsDrawnCount)) return;
     if (animating && !force) return;
     if (el.pixelsDrawn) el.pixelsDrawn.textContent = `${pixelsDrawnCount}`;
     if (el.pixelsRemaining)
@@ -118,6 +120,11 @@ export function UI(canvas: Canvas) {
     onStartAnimation();
   }
 
+  function setLoadingError() {
+    setLoading(false);
+    show(el.error);
+  }
+
   return {
     checkTouchMessage,
     updateText,
@@ -128,5 +135,6 @@ export function UI(canvas: Canvas) {
     isAnimating() {
       return animating;
     },
+    setLoadingError,
   };
 }

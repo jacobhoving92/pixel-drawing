@@ -21,12 +21,19 @@ const socket = Socket({
       .then(async (res) => {
         return await res.json();
       })
+      .then((data: any) => {
+        if (data?.error) throw new Error('Failed to load pixel data');
+        return data;
+      })
       .then((data: number[]) => {
         canvas.drawData(data);
         ui.setLoading(false);
         ui.updateText(data.length);
         previewDrawnCount = data.length;
         if (processMode) ui.loopProcess();
+      })
+      .catch(() => {
+        ui.setLoadingError();
       });
   },
   onMessage: (message) => {
@@ -104,20 +111,15 @@ window.addEventListener('mousemove', (ev) => {
 
 type Coords = [number, number];
 
-const midpoint = (t1: Touch, t2: Touch): Coords => [
-  (t1.clientX + t2.clientX) / 2,
-  (t1.clientY + t2.clientY) / 2,
-];
-
 export function getCentroid(touchEvents: TouchList): [number, number] {
   const length = touchEvents.length;
-  let clientX = 0;
-  let clientY = 0;
+  let pageX = 0;
+  let pageY = 0;
   for (let i = 0; i < length; i++) {
-    clientX += touchEvents[i].pageX;
-    clientY += touchEvents[i].pageY;
+    pageX += touchEvents[i].pageX;
+    pageY += touchEvents[i].pageY;
   }
-  return [clientX / length, clientY / length];
+  return [pageX / length, pageY / length];
 }
 
 let maxX = 4096 - window.innerWidth;
@@ -132,11 +134,16 @@ window.addEventListener('touchstart', (ev) => {
 });
 
 let lastCentroid: Coords | null = null;
-let lastTouchCount = 0;
+
+let initialWindowX = window.scrollX;
+let initialWindowY = window.scrollY;
+
 canvas.canvas.addEventListener('touchstart', (ev) => {
   ev.preventDefault();
   if (ev.touches.length > 1) {
-    lastCentroid = null;
+    lastCentroid = getCentroid(ev.targetTouches);
+    initialWindowX = window.scrollX;
+    initialWindowY = window.scrollY;
   }
 });
 
@@ -145,21 +152,20 @@ window.addEventListener('touchend', (ev) => {
 });
 
 canvas.canvas.addEventListener('touchend', (ev) => {
-  if (ev.touches.length < 2) {
+  if (ev.targetTouches.length < 2) {
     lastCentroid = null;
   }
 });
 
 function handlePan(ev: TouchEvent) {
-  const centroid = getCentroid(ev.touches);
-  const touchCount = ev.touches.length;
-  if (lastTouchCount === touchCount) {
+  if (ev.targetTouches.length > 1) {
+    const centroid = getCentroid(ev.targetTouches);
     if (lastCentroid) {
       const dX = lastCentroid[0] - centroid[0];
       const dY = lastCentroid[1] - centroid[1];
 
-      const left = Math.max(0, Math.min(maxX, window.scrollX + dX));
-      const top = Math.max(0, Math.min(maxY, window.scrollY + dY));
+      const left = Math.max(0, Math.min(maxX, initialWindowX + dX));
+      const top = Math.max(0, Math.min(maxY, initialWindowY + dY));
 
       window.scrollTo({
         left,
@@ -168,8 +174,6 @@ function handlePan(ev: TouchEvent) {
       });
     }
   }
-  lastCentroid = centroid;
-  lastTouchCount = touchCount;
 }
 
 canvas.canvas.addEventListener(
@@ -195,7 +199,9 @@ canvas.canvas.addEventListener(
       return;
     }
 
-    handlePan(ev);
+    window.requestAnimationFrame(() => {
+      handlePan(ev);
+    });
   },
   { passive: false },
 );
