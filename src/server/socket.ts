@@ -18,24 +18,28 @@ export function SocketServer(server: http.Server, canvas?: CanvasInstance) {
             eraseMode = true;
             return;
           }
-          if (eraseMode) {
-            await canvas?.erase(coordinateIndex);
-          } else {
-            const pixelsDrawnCount = await canvas?.draw(coordinateIndex);
-            // If we get a number, the pixel is saved as drawn, else it the pixel is already set
-            if (pixelsDrawnCount) {
-              wss.clients.forEach((client) => {
-                if (client.readyState === WebSocket.OPEN) {
-                  client.send(
-                    JSON.stringify([
-                      coordinateIndex,
-                      pixelsDrawnCount,
-                      client === socket ? 1 : 0,
-                    ]),
-                  );
-                }
-              });
+          try {
+            if (eraseMode) {
+              await canvas?.erase(coordinateIndex);
+            } else {
+              const pixelsDrawnCount = await canvas?.draw(coordinateIndex);
+              // If we get a number, the pixel is saved as drawn, else it the pixel is already set
+              if (pixelsDrawnCount) {
+                wss.clients.forEach((client) => {
+                  if (client.readyState === WebSocket.OPEN) {
+                    client.send(
+                      JSON.stringify([
+                        coordinateIndex,
+                        pixelsDrawnCount,
+                        client === socket ? 1 : 0,
+                      ]),
+                    );
+                  }
+                });
+              }
             }
+          } catch {
+            console.error('Could not draw pixel');
           }
         });
 

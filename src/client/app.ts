@@ -7,6 +7,8 @@ let previewDrawnCount = 0;
 const canvas = Canvas(document.getElementById('canvas'));
 const ui = UI(canvas);
 
+ui.setLoading(true);
+
 // ADD SOCKET LISTENERS
 const hostname =
   process.env.NODE_ENV === 'production'
@@ -16,7 +18,6 @@ const hostname =
 const socket = Socket({
   hostname,
   onOpen: () => {
-    ui.setLoading(true);
     fetch(window.location.protocol + '//' + hostname + '/api/data')
       .then(async (res) => {
         return await res.json();

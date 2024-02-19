@@ -7,15 +7,18 @@ export async function Store() {
   const KEY = 'canvas';
   const HKEY = 'pixels';
 
-  const client = await createClient({ url: process.env.REDIS_URL || undefined })
-    .on('error', (err) => {
-      console.log('Redis Client Error', err);
-      throw new Error('Could not connect to DB');
-    })
-    .connect();
+  let client: ReturnType<typeof createClient>;
+  const init = async () => {
+    client = await createClient({ url: process.env.REDIS_URL || undefined })
+      .on('error', (err) => {
+        console.log(`Redis Client Error, retrying…`, err);
+      })
+      .connect();
+  };
 
   const hasValueAtIndex = async (coordinateIndex: string) => {
-    return await client?.hExists(HKEY, coordinateIndex);
+    if (!client) return true;
+    return await client.hExists(HKEY, coordinateIndex);
   };
 
   const setValueAtIndex = async (coordinateIndex: string) => {
@@ -26,7 +29,7 @@ export async function Store() {
   };
 
   const removeValueAtIndex = async (coordinateIndex: string) => {
-    return await client?.lRem(KEY, -1, coordinateIndex);
+    return await client.lRem(KEY, -1, coordinateIndex);
   };
 
   const getAllValues = async () => {
@@ -67,6 +70,8 @@ export async function Store() {
       return false;
     }
   };
+
+  init();
 
   return {
     hasValueAtIndex,
