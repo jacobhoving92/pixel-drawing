@@ -161,9 +161,10 @@ async function main() {
       res.setHeader('Access-Control-Allow-Origin', '*');
     }
     try {
-      const data = await canvas?.getCurrentData();
+      const data = await canvas?.getCurrentDataBinary();
       if (!data) throw new Error('Could not get canvas data');
-      res.json(data);
+      res.setHeader('Content-Type', 'application/octet-stream');
+      res.send(data);
     } catch (e: any) {
       console.error(e);
       res.json({ error: true, message: e.message ?? 'Could not get data' });

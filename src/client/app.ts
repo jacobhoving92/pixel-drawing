@@ -20,10 +20,13 @@ const socket = Socket({
   onOpen: () => {
     fetch(window.location.protocol + '//' + hostname + '/api/data')
       .then(async (res) => {
-        return await res.json();
-      })
-      .then((data: any) => {
-        if (data?.error) throw new Error('Failed to load pixel data');
+        const buf = await res.arrayBuffer();
+        const bytes = new Uint8Array(buf);
+        const count = bytes.length / 3;
+        const data = new Array<number>(count);
+        for (let i = 0; i < count; i++) {
+          data[i] = (bytes[i * 3] << 16) | (bytes[i * 3 + 1] << 8) | bytes[i * 3 + 2];
+        }
         return data;
       })
       .then((data: number[]) => {

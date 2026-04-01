@@ -12,6 +12,17 @@ export async function Canvas() {
     async getCurrentData() {
       return (await store.getAllValues()).map((v) => parseInt(v, 10));
     },
+    async getCurrentDataBinary() {
+      const values = await store.getAllValues();
+      const buf = Buffer.allocUnsafe(values.length * 3);
+      for (let i = 0; i < values.length; i++) {
+        const v = parseInt(values[i], 10);
+        buf[i * 3] = (v >> 16) & 0xff;
+        buf[i * 3 + 1] = (v >> 8) & 0xff;
+        buf[i * 3 + 2] = v & 0xff;
+      }
+      return buf;
+    },
     async getInitialData() {
       return store.getInitialValues();
     },
