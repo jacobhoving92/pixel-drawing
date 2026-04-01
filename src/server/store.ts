@@ -57,12 +57,12 @@ export async function Store() {
       return client.lRange(DRAW_KEY, 0, -1);
     },
 
-    async setValues(values: string[]) {
+    async setValues(values: Array<string | number>) {
       await Promise.all([client.del(DRAW_KEY), client.del(EXISTS_KEY)]);
 
       const CHUNK = 1000;
       for (let i = 0; i < values.length; i += CHUNK) {
-        const chunk = values.slice(i, i + CHUNK);
+        const chunk = values.slice(i, i + CHUNK).map(String);
         const pipeline = client.multi();
         pipeline.rPush(DRAW_KEY, chunk);
         const hashArgs: string[] = chunk.flatMap((v) => [v, '1']);
