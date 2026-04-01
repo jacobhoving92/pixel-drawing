@@ -43,5 +43,9 @@
     "prettier": "^3.2.5",
     "typescript": "^5.3.3"
   },
+  "resolutions": {
+    "@types/express": "^4.17.21",
+    "@types/express-serve-static-core": "^4.19.0"
+  },
   "browserslist": "> 0.5%, last 2 versions, not dead"
 }
