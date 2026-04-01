@@ -1,180 +1,68 @@
 import { createClient } from 'redis';
-import range from 'lodash/range';
-import flatten from 'lodash/flatten';
-import chunk from 'lodash/chunk';
-import { sum } from 'lodash';
-
-async function keyManager(client: ReturnType<typeof createClient>) {
-  const KEY_TRACKER = 'keys';
-  let amountOfKeys = await client.lLen(KEY_TRACKER);
-
-  const getKeys = () => range(amountOfKeys);
-  const existsKey = (n: number) => (n === 0 ? `pixels` : `pixels-${n}`);
-  const drawKey = (n: number) => (n === 0 ? `canvas` : `canvas-${n}`);
-
-  const getLength = async () => {
-    const lengths = await Promise.all(
-      getKeys().map(async (n) => await client.lLen(drawKey(n))),
-    );
-    return sum(lengths);
-  };
-
-  let length = await getLength();
-  const next = async () => {
-    amountOfKeys = await client.rPush(KEY_TRACKER, '1');
-    length = await getLength();
-    return amountOfKeys;
-  };
-
-  if (amountOfKeys === 0) await next();
-
-  console.log('amount', amountOfKeys, getKeys(), length);
-
-  return {
-    length: () => {
-      return length;
-    },
-    currentIndex: () => {
-      return amountOfKeys - 1;
-    },
-    next,
-    reset: () => {
-      return client.del(KEY_TRACKER);
-    },
-    getKeys,
-    existsKey,
-    drawKey,
-  };
-}
 
 export async function Store() {
-  let client: ReturnType<typeof createClient>;
-  let keys: Awaited<ReturnType<typeof keyManager>>;
+  const client = await createClient({ url: process.env.REDIS_URL || undefined })
+    .on('error', (err) => console.log('Redis Client Error', err))
+    .connect();
 
-  const init = async () => {
-    client = await createClient({ url: process.env.REDIS_URL || undefined })
-      .on('error', (err) => {
-        console.log(`Redis Client Error, retrying…`, err);
-      })
-      .connect();
+  const DRAW_KEY = 'canvas';
+  const EXISTS_KEY = 'pixels';
 
-    keys = await keyManager(client);
-  };
-
-  const hasValueAtIndex = async (coordinateIndex: string) => {
-    if (!client) return true;
-    return (
-      await Promise.all(
-        keys
-          .getKeys()
-          .map(
-            async (n) =>
-              await client.hExists(keys.existsKey(n), coordinateIndex),
-          ),
-      )
-    ).some((v) => v);
-  };
-
-  const writeToRedis = async (coordinateIndex: string): Promise<number> => {
-    try {
-      await client?.hSet(
-        keys.existsKey(keys.currentIndex()),
-        coordinateIndex,
-        1,
-      );
-      return (
-        keys.length() +
-        (await client?.rPush(
-          keys.drawKey(keys.currentIndex()),
-          coordinateIndex,
-        ))
-      );
-    } catch {
-      await keys.next();
-      return writeToRedis(coordinateIndex);
-    }
-  };
-
-  const setValueAtIndex = async (coordinateIndex: string) => {
-    const hasValue = await hasValueAtIndex(coordinateIndex);
-    if (hasValue) return undefined;
-    return writeToRedis(coordinateIndex);
-  };
-
-  const removeValueAtIndex = async (coordinateIndex: string) => {
-    return await Promise.all(
-      keys
-        .getKeys()
-        .map((n) => client.lRem(keys.drawKey(n), -1, coordinateIndex)),
-    );
-  };
-
-  const getInitialValues = async () => {
-    if (!client) return [];
-    const data = await client?.lRange(keys.drawKey(0), 0, 36000);
-    return data.map((v) => parseInt(v, 10));
-  };
-
-  const getAllValues = async () => {
-    if (!client) return [];
-    const data = await Promise.all(
-      keys.getKeys().map((n) => getValuesForKeyIndex(n)),
-    );
-    return flatten(data);
-  };
-
-  const getValuesForKeyIndex = async (n: number) => {
-    if (!client) return [];
-    const key = keys.drawKey(n);
-    const length = await client.lLen(key);
-    const maxSize = 50000;
-    const chunkSize = Math.max(1, Math.ceil(length / maxSize));
-    const data = await Promise.all([
-      ...range(chunkSize + 1).map((i) =>
-        client?.lRange(key, i * maxSize, maxSize * (i + 1) - 1),
-      ),
-    ]);
-
-    return flatten(data);
-  };
-
-  const reset = async () => {
-    return Promise.all([
-      ...keys.getKeys().map((n) => client.del(keys.drawKey(n))),
-      ...keys.getKeys().map((n) => client.del(keys.existsKey(n))),
-    ]);
-  };
-
-  const setValues = async (values: string[]) => {
-    try {
-      // await reset();
-      // const chunked = chunk(values, 512);
-      // await Promise.all(
-      //   chunked.map((chunk) => {
-      //     return client?.rPush(KEY, chunk);
-      //   }),
-      // );
-
-      // await Promise.all(
-      //   chunked.map((chunk) => {
-      //     return client?.hSet(HKEY, flatten(chunk.map((k) => [k, 1])));
-      //   }),
-      // );
-      return true;
-    } catch (e) {
-      return false;
-    }
-  };
-
-  await init();
+  // Lua script: atomically check if pixel exists, if not set it and push to draw list.
+  // Returns the new list length (= draw count) if drawn, or 0 if already exists.
+  const DRAW_SCRIPT = `
+    if redis.call('HEXISTS', KEYS[1], ARGV[1]) == 1 then
+      return 0
+    end
+    redis.call('HSET', KEYS[1], ARGV[1], 1)
+    return redis.call('RPUSH', KEYS[2], ARGV[1])
+  `;
 
   return {
-    getInitialValues,
-    hasValueAtIndex,
-    setValueAtIndex,
-    removeValueAtIndex,
-    getAllValues,
-    setValues,
-    reset,
+    async getInitialValues() {
+      const data = await client.lRange(DRAW_KEY, 0, 36000);
+      return data.map((v) => parseInt(v, 10));
+    },
+
+    async setValueAtIndex(coordinateIndex: string) {
+      const result = await client.eval(DRAW_SCRIPT, {
+        keys: [EXISTS_KEY, DRAW_KEY],
+        arguments: [coordinateIndex],
+      });
+      return (result as number) || undefined;
+    },
+
+    async setValuesAtIndices(coordinateIndices: string[]) {
+      const pipeline = client.multi();
+      for (const idx of coordinateIndices) {
+        pipeline.eval(DRAW_SCRIPT, {
+          keys: [EXISTS_KEY, DRAW_KEY],
+          arguments: [idx],
+        });
+      }
+      const results = await pipeline.execAsPipeline();
+      // Each result is the new list length if drawn, or 0 if already exists
+      return results.map((r, i) => ({
+        coordinateIndex: coordinateIndices[i],
+        pixelsDrawnCount: (r as number) || undefined,
+      }));
+    },
+
+    async removeValueAtIndex(coordinateIndex: string) {
+      await client.hDel(EXISTS_KEY, coordinateIndex);
+      return client.lRem(DRAW_KEY, -1, coordinateIndex);
+    },
+
+    async getAllValues() {
+      return client.lRange(DRAW_KEY, 0, -1);
+    },
+
+    async setValues(_values: string[]) {
+      return true;
+    },
+
+    async reset() {
+      return Promise.all([client.del(DRAW_KEY), client.del(EXISTS_KEY)]);
+    },
   };
 }

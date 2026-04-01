@@ -12,6 +12,20 @@ export function Socket({
   let timeout = 250;
   let socket: WebSocket | undefined;
 
+  let buffer: number[] = [];
+  let flushScheduled = false;
+
+  function flush() {
+    flushScheduled = false;
+    if (!socket || socket.readyState !== 1 || buffer.length === 0) return;
+    if (buffer.length === 1) {
+      socket.send(JSON.stringify(buffer[0]));
+    } else {
+      socket.send(JSON.stringify(buffer));
+    }
+    buffer = [];
+  }
+
   const connect = () => {
     socket = new WebSocket(serverUrl);
 
@@ -27,8 +41,10 @@ export function Socket({
     });
 
     socket.addEventListener('close', () => {
-      console.log('We disconnected from the socket, retrying in', timeout);
-      setTimeout(connect, Math.min(30000, (timeout += timeout)));
+      timeout = Math.min(30000, timeout * 2);
+      const jitter = timeout * (0.8 + Math.random() * 0.4);
+      console.log('We disconnected from the socket, retrying in', Math.round(jitter));
+      setTimeout(connect, jitter);
     });
 
     socket.addEventListener('message', (event: MessageEvent<string>) => {
@@ -41,7 +57,14 @@ export function Socket({
   connect();
 
   return {
-    send: (data: string) => {
+    send: (coordinateIndex: number) => {
+      buffer.push(coordinateIndex);
+      if (!flushScheduled) {
+        flushScheduled = true;
+        requestAnimationFrame(flush);
+      }
+    },
+    sendRaw: (data: string) => {
       if (!socket || socket.readyState !== 1) return;
       socket.send(data);
     },

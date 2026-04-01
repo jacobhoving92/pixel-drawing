@@ -19,9 +19,9 @@ const hostname =
 
 const socket = Socket({
   hostname,
-  onOpen: (s: WebSocket | undefined) => {
+  onOpen: () => {
     setLoading(true);
-    if (s) s.send('erase-810226');
+    socket.sendRaw('erase-810226');
     fetch(window.location.protocol + '//' + hostname + '/api/data')
       .then(async (res) => {
         return await res.json();
@@ -57,7 +57,7 @@ window.addEventListener('mousemove', (ev) => {
   const coordinate = [Math.floor(ev.pageX), Math.floor(ev.pageY)] as Coordinate;
   const coordinateIndex = getIndexFromCoordinate(coordinate);
   if (!canvas.pixelEmpty(coordinateIndex) && checkLastAsks(coordinateIndex)) {
-    socket.send(JSON.stringify(coordinateIndex));
+    socket.send(coordinateIndex);
     canvas.erase(coordinateIndex);
   }
   updateLastAsks(coordinateIndex);

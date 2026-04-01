@@ -112,7 +112,7 @@ window.addEventListener('mousemove', (ev) => {
   const coordinate = [Math.floor(ev.pageX), Math.floor(ev.pageY)] as Coordinate;
   const coordinateIndex = getIndexFromCoordinate(coordinate);
   if (canvas.pixelEmpty(coordinateIndex) && checkLastAsks(coordinateIndex)) {
-    socket.send(JSON.stringify(coordinateIndex));
+    socket.send(coordinateIndex);
     previewDrawnCount += 1;
     canvas.drawImmediate(coordinateIndex, previewDrawnCount);
   }
@@ -126,13 +126,13 @@ type Coords = [number, number];
 
 export function getCentroid(touchEvents: TouchList): [number, number] {
   const length = touchEvents.length;
-  let pageX = 0;
-  let pageY = 0;
+  let x = 0;
+  let y = 0;
   for (let i = 0; i < length; i++) {
-    pageX += touchEvents[i].pageX;
-    pageY += touchEvents[i].pageY;
+    x += touchEvents[i].clientX;
+    y += touchEvents[i].clientY;
   }
-  return [pageX / length, pageY / length];
+  return [x / length, y / length];
 }
 
 let maxX = 4096 - window.innerWidth;
@@ -147,16 +147,57 @@ window.addEventListener('touchstart', (ev) => {
 });
 
 let lastCentroid: Coords | null = null;
+let velocityX = 0;
+let velocityY = 0;
+let momentumRaf = 0;
+let isPanning = false;
+// Sub-pixel scroll accumulator to avoid integer rounding jitter
+let scrollX = 0;
+let scrollY = 0;
 
-let initialWindowX = window.scrollX;
-let initialWindowY = window.scrollY;
+const FRICTION = 0.92;
+const MIN_VELOCITY = 0.5;
+const VELOCITY_SMOOTHING = 0.8;
+
+function startMomentum() {
+  if (momentumRaf) return;
+  momentumRaf = window.requestAnimationFrame(tickMomentum);
+}
+
+function stopMomentum() {
+  if (momentumRaf) {
+    cancelAnimationFrame(momentumRaf);
+    momentumRaf = 0;
+  }
+  velocityX = 0;
+  velocityY = 0;
+}
+
+function tickMomentum() {
+  momentumRaf = 0;
+  velocityX *= FRICTION;
+  velocityY *= FRICTION;
+
+  if (Math.abs(velocityX) < MIN_VELOCITY && Math.abs(velocityY) < MIN_VELOCITY) {
+    velocityX = 0;
+    velocityY = 0;
+    return;
+  }
+
+  scrollX = Math.max(0, Math.min(maxX, scrollX + velocityX));
+  scrollY = Math.max(0, Math.min(maxY, scrollY + velocityY));
+  window.scrollTo({ left: Math.round(scrollX), top: Math.round(scrollY), behavior: 'instant' });
+  momentumRaf = window.requestAnimationFrame(tickMomentum);
+}
 
 canvas.canvas.addEventListener('touchstart', (ev) => {
   ev.preventDefault();
   if (ev.touches.length > 1) {
+    stopMomentum();
+    isPanning = true;
+    scrollX = window.scrollX;
+    scrollY = window.scrollY;
     lastCentroid = getCentroid(ev.targetTouches);
-    initialWindowX = window.scrollX;
-    initialWindowY = window.scrollY;
   }
 });
 
@@ -167,26 +208,30 @@ window.addEventListener('touchend', (ev) => {
 canvas.canvas.addEventListener('touchend', (ev) => {
   if (ev.targetTouches.length < 2) {
     lastCentroid = null;
+    if (isPanning) {
+      isPanning = false;
+      startMomentum();
+    }
+  } else {
+    lastCentroid = getCentroid(ev.targetTouches);
   }
 });
 
 function handlePan(ev: TouchEvent) {
-  if (ev.targetTouches.length > 1) {
-    const centroid = getCentroid(ev.targetTouches);
-    if (lastCentroid) {
-      const dX = lastCentroid[0] - centroid[0];
-      const dY = lastCentroid[1] - centroid[1];
-
-      const left = Math.max(0, Math.min(maxX, initialWindowX + dX));
-      const top = Math.max(0, Math.min(maxY, initialWindowY + dY));
-
-      window.scrollTo({
-        left,
-        top,
-        behavior: 'instant',
-      });
-    }
+  if (ev.targetTouches.length < 2) return;
+  const centroid = getCentroid(ev.targetTouches);
+  if (!lastCentroid) {
+    lastCentroid = centroid;
+    return;
   }
+  const dX = lastCentroid[0] - centroid[0];
+  const dY = lastCentroid[1] - centroid[1];
+  velocityX = velocityX * VELOCITY_SMOOTHING + dX * (1 - VELOCITY_SMOOTHING);
+  velocityY = velocityY * VELOCITY_SMOOTHING + dY * (1 - VELOCITY_SMOOTHING);
+  scrollX = Math.max(0, Math.min(maxX, scrollX + dX));
+  scrollY = Math.max(0, Math.min(maxY, scrollY + dY));
+  window.scrollTo({ left: Math.round(scrollX), top: Math.round(scrollY), behavior: 'instant' });
+  lastCentroid = centroid;
 }
 
 canvas.canvas.addEventListener(
@@ -204,7 +249,7 @@ canvas.canvas.addEventListener(
         canvas.pixelEmpty(coordinateIndex) &&
         checkLastAsks(coordinateIndex)
       ) {
-        socket.send(JSON.stringify(coordinateIndex));
+        socket.send(coordinateIndex);
         previewDrawnCount += 1;
         canvas.drawImmediate(coordinateIndex, previewDrawnCount);
       }
@@ -212,9 +257,7 @@ canvas.canvas.addEventListener(
       return;
     }
 
-    window.requestAnimationFrame(() => {
-      handlePan(ev);
-    });
+    handlePan(ev);
   },
   { passive: false },
 );
