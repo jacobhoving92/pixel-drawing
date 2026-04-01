@@ -9,6 +9,9 @@ export async function Canvas() {
     async getRawData() {
       return store.getAllValues();
     },
+    streamRawData() {
+      return store.streamValues();
+    },
     async getCurrentData() {
       return (await store.getAllValues()).map((v) => parseInt(v, 10));
     },

@@ -57,6 +57,17 @@ export async function Store() {
       return client.lRange(DRAW_KEY, 0, -1);
     },
 
+    async *streamValues(chunkSize = 10000) {
+      let offset = 0;
+      while (true) {
+        const chunk = await client.lRange(DRAW_KEY, offset, offset + chunkSize - 1);
+        if (chunk.length === 0) break;
+        yield chunk;
+        offset += chunk.length;
+        if (chunk.length < chunkSize) break;
+      }
+    },
+
     async setValues(values: Array<string | number>) {
       await Promise.all([client.del(DRAW_KEY), client.del(EXISTS_KEY)]);
 

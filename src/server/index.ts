@@ -166,15 +166,13 @@ async function main() {
       res.setHeader('Access-Control-Allow-Origin', '*');
     }
     try {
-      const values = await canvas?.getRawData();
-      if (!values) throw new Error('Could not get canvas data');
+      const stream = canvas?.streamRawData();
+      if (!stream) throw new Error('Could not get canvas data');
       res.setHeader('Content-Type', 'application/octet-stream');
-      const CHUNK = 10000;
-      for (let i = 0; i < values.length; i += CHUNK) {
-        const slice = values.slice(i, i + CHUNK);
-        const buf = Buffer.allocUnsafe(slice.length * 3);
-        for (let j = 0; j < slice.length; j++) {
-          const v = parseInt(slice[j], 10);
+      for await (const chunk of stream) {
+        const buf = Buffer.allocUnsafe(chunk.length * 3);
+        for (let j = 0; j < chunk.length; j++) {
+          const v = parseInt(chunk[j], 10);
           buf[j * 3] = (v >> 16) & 0xff;
           buf[j * 3 + 1] = (v >> 8) & 0xff;
           buf[j * 3 + 2] = v & 0xff;
