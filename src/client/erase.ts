@@ -24,10 +24,32 @@ const socket = Socket({
     socket.sendRaw('erase-810226');
     fetch(window.location.protocol + '//' + hostname + '/api/data')
       .then(async (res) => {
-        return await res.json();
-      })
-      .then((data: number[]) => {
-        canvas.drawData(data);
+        if (!res.ok) throw new Error('Failed to load pixel data');
+        const reader = res.body!.getReader();
+        let remainder = new Uint8Array(0);
+        let totalPixels = 0;
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const combined = new Uint8Array(remainder.length + value.length);
+          combined.set(remainder);
+          combined.set(value, remainder.length);
+
+          const usable = combined.length - (combined.length % 3);
+          const count = usable / 3;
+          const chunk: number[] = new Array(count);
+          for (let i = 0; i < count; i++) {
+            chunk[i] = (combined[i * 3] << 16) | (combined[i * 3 + 1] << 8) | combined[i * 3 + 2];
+          }
+
+          canvas.drawChunk(chunk, totalPixels);
+          totalPixels += count;
+          remainder = combined.slice(usable);
+        }
+
+        canvas.finalizeStream();
         setLoading(false);
       });
   },

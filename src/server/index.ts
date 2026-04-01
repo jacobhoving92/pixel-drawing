@@ -109,22 +109,20 @@ async function main() {
     res.sendFile(path.join(__dirname, 'public', 'erase.html'));
   });
 
-  app.post('/api/clear', authenticate, (req, res) => {
+  app.post('/api/clear', authenticate, async (req, res) => {
     console.log('resetting canvas');
     try {
-      canvas?.reset();
+      await canvas?.reset();
       res.json({
         success: true,
         message: 'Canvas cleared',
       });
-    } catch (e: any) {
+    } catch (e) {
       console.error(e);
-      res.json(
-        JSON.stringify({
-          error: true,
-          message: e.message ?? 'Could not clear canvas',
-        }),
-      );
+      res.json({
+        error: true,
+        message: e instanceof Error ? e.message : 'Could not clear canvas',
+      });
     }
   });
 
@@ -141,11 +139,11 @@ async function main() {
           res.json({
             success,
           });
-        } catch (e: any) {
+        } catch (e) {
           console.error(e);
           res.json({
             error: true,
-            message: e.message ?? 'Could not upload data',
+            message: e instanceof Error ? e.message : 'Could not upload data',
           });
         }
       } else {
@@ -161,6 +159,8 @@ async function main() {
 
   app.use(express.static(path.join(__dirname, '../', 'static')));
 
+  app.get('/favicon.ico', (_, res) => res.status(204).end());
+
   app.get('/api/data', async (_, res) => {
     if (process.env.NODE_ENV === 'development') {
       res.setHeader('Access-Control-Allow-Origin', '*');
@@ -172,7 +172,7 @@ async function main() {
       for await (const chunk of stream) {
         const buf = Buffer.allocUnsafe(chunk.length * 3);
         for (let j = 0; j < chunk.length; j++) {
-          const v = parseInt(chunk[j], 10);
+          const v = +chunk[j];
           buf[j * 3] = (v >> 16) & 0xff;
           buf[j * 3 + 1] = (v >> 8) & 0xff;
           buf[j * 3 + 2] = v & 0xff;
@@ -180,10 +180,10 @@ async function main() {
         res.write(buf);
       }
       res.end();
-    } catch (e: any) {
+    } catch (e) {
       console.error(e);
       if (!res.headersSent) {
-        res.json({ error: true, message: e.message ?? 'Could not get data' });
+        res.json({ error: true, message: e instanceof Error ? e.message : 'Could not get data' });
       }
     }
   });
@@ -195,11 +195,11 @@ async function main() {
     try {
       const data = await canvas?.getRawData();
       res.json(data);
-    } catch (e: any) {
+    } catch (e) {
       console.error(e);
       res.json({
         error: true,
-        message: e.message ?? 'Could not get raw data',
+        message: e instanceof Error ? e.message : 'Could not get raw data',
       });
     }
   });

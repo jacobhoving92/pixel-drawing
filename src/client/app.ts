@@ -61,37 +61,30 @@ const socket = Socket({
   },
   onMessage: (message) => {
     const parsedMessage = JSON.parse(message);
-    if (!parsedMessage?.length) return;
-    if (parsedMessage.length > 3) {
-      canvas.drawData(parsedMessage as number[], true);
-      ui.updateText(parsedMessage.length);
-      previewDrawnCount = parsedMessage.length;
-    } else {
-      const [coordinateIndex, pixelsDrawnCount, owner] = parsedMessage as [
-        string,
-        number,
-        number,
-      ];
-      canvas.drawImmediate(
-        parseInt(coordinateIndex, 10),
-        pixelsDrawnCount,
-        true,
-      );
-      ui.updateText(pixelsDrawnCount);
-      if (owner !== 1) previewDrawnCount = pixelsDrawnCount;
-    }
+    if (!parsedMessage?.length || parsedMessage.length !== 3) return;
+    const [coordinateIndex, pixelsDrawnCount, owner] = parsedMessage as [
+      string,
+      number,
+      number,
+    ];
+    canvas.drawImmediate(
+      parseInt(coordinateIndex, 10),
+      pixelsDrawnCount,
+      true,
+    );
+    ui.updateText(pixelsDrawnCount);
+    if (owner !== 1) previewDrawnCount = pixelsDrawnCount;
   },
 });
 
 // PROCESS MODE
 let processMode = window.location.search === '?process';
 function toggleProcessMode() {
-  processMode = window.location.search === '?process';
-  window.location.search = processMode ? '' : 'process';
-  if (!processMode) {
-    ui.loopProcess();
-  } else {
+  if (processMode) {
     ui.stopAnimation();
+    window.location.search = '';
+  } else {
+    window.location.search = 'process';
   }
 }
 
@@ -103,7 +96,6 @@ let demoX = 0;
 let demoY = 0;
 
 function toggleDemoMode() {
-  demoMode = window.location.search === '?demo';
   window.location.search = demoMode ? '' : 'demo';
 }
 

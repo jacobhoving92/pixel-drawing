@@ -68,6 +68,9 @@ export function Canvas(containerEl: HTMLElement | null) {
     // Check if pixel already drawn
     if (!force && data[index + 3] !== 0) return;
     const color = getColor(pixelsDrawnCount);
+    data[index] = color.r;
+    data[index + 1] = color.g;
+    data[index + 2] = color.b;
     data[index + 3] = 255;
 
     pixel.data[0] = color.r;
@@ -81,7 +84,10 @@ export function Canvas(containerEl: HTMLElement | null) {
 
   function erasePixel(coordinateIndex: number) {
     const index = 4 * coordinateIndex;
-    pixel.data[index + 3] = 0;
+    pixel.data[0] = 0;
+    pixel.data[1] = 0;
+    pixel.data[2] = 0;
+    pixel.data[3] = 0;
     data[index + 3] = 0;
     const coordinate = getCoordinateFromCoordinateIndex(coordinateIndex);
     context?.putImageData(pixel, coordinate[0], coordinate[1]);
@@ -97,35 +103,21 @@ export function Canvas(containerEl: HTMLElement | null) {
     };
   }
 
-  function drawData(indices: number[], initial?: boolean) {
-    if (!indices || !indices.length) return;
-    console.log('Start drawing initial data…', performance.now());
-    if (initial) {
-      indices.forEach((coordinateIndex, index) => {
-        drawPixelToBuffer(coordinateIndex, index);
-      });
-      drawBuffer();
-    } else {
-      clearCanvas();
-      backupIndices = indices;
-      indices.forEach((coordinateIndex, index) => {
-        drawPixelToBuffer(coordinateIndex, index);
-      });
-      drawBuffer();
-      backupImage = image;
-    }
-    console.log('Done.', performance.now());
-  }
-
   // Streaming: draw a chunk of pixels starting at a global offset
   let streamIndices: number[] = [];
+  let drawBufferRaf = 0;
 
   function drawChunk(indices: number[], offset: number) {
     for (let i = 0; i < indices.length; i++) {
       drawPixelToBuffer(indices[i], offset + i);
     }
     streamIndices.push(...indices);
-    drawBuffer();
+    if (!drawBufferRaf) {
+      drawBufferRaf = requestAnimationFrame(() => {
+        drawBufferRaf = 0;
+        drawBuffer();
+      });
+    }
   }
 
   function finalizeStream() {
@@ -190,7 +182,6 @@ export function Canvas(containerEl: HTMLElement | null) {
     erase(coordinateIndex: number) {
       erasePixel(coordinateIndex);
     },
-    drawData,
     drawChunk,
     finalizeStream,
     getColor,

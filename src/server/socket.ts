@@ -10,8 +10,9 @@ export function SocketServer(server: http.Server, canvas?: CanvasInstance) {
     coordinateIndex: string,
     pixelsDrawnCount: number,
   ) {
-    const ownerMsg = JSON.stringify([coordinateIndex, pixelsDrawnCount, 1]);
-    const otherMsg = JSON.stringify([coordinateIndex, pixelsDrawnCount, 0]);
+    const base = `["${coordinateIndex}",${pixelsDrawnCount},`;
+    const ownerMsg = base + '1]';
+    const otherMsg = base + '0]';
     wss.clients.forEach((client) => {
       if (client.readyState === WebSocket.OPEN) {
         client.send(client === sender ? ownerMsg : otherMsg);
@@ -51,11 +52,6 @@ export function SocketServer(server: http.Server, canvas?: CanvasInstance) {
       wss.on('connection', async (socket) => {
         console.log('We have a connection!');
         let eraseMode = false;
-
-        if (canvas) {
-          const initialData = await canvas.getInitialData();
-          socket.send(JSON.stringify(initialData));
-        }
 
         socket.on('error', console.error);
         socket.on('message', async (data) => {

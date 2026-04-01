@@ -1,6 +1,5 @@
 import { Store } from './store';
 import fs from 'fs';
-export type Coordinate = [number, number];
 
 export async function Canvas() {
   const store = await Store();
@@ -14,9 +13,6 @@ export async function Canvas() {
     },
     async getCurrentData() {
       return (await store.getAllValues()).map((v) => parseInt(v, 10));
-    },
-    async getInitialData() {
-      return store.getInitialValues();
     },
     draw(coordinateIndex: string) {
       return store.setValueAtIndex(coordinateIndex);
@@ -36,8 +32,8 @@ export async function Canvas() {
         return false;
       }
     },
-    reset() {
-      store.reset();
+    async reset() {
+      await store.reset();
     },
   };
 }

@@ -19,11 +19,6 @@ export async function Store() {
   `;
 
   return {
-    async getInitialValues() {
-      const data = await client.lRange(DRAW_KEY, 0, 36000);
-      return data.map((v) => parseInt(v, 10));
-    },
-
     async setValueAtIndex(coordinateIndex: string) {
       const result = await client.eval(DRAW_SCRIPT, {
         keys: [EXISTS_KEY, DRAW_KEY],
