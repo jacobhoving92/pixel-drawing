@@ -16,7 +16,8 @@
     "build:client": "parcel build --dist-dir=dist/public",
     "build:server": "tsc -p ./tsconfig.server.json",
     "prettier": "prettier --config .prettierrc --write .",
-    "clean": "rimraf dist && rimraf .parcel-cache"
+    "clean": "rimraf dist && rimraf .parcel-cache",
+    "typecheck": "tsc --noEmit && tsc -p ./tsconfig.server.json --noEmit"
   },
   "author": "Ingo Valente",
   "license": "MIT",

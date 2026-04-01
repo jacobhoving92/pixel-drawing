@@ -97,16 +97,23 @@ export function Canvas(containerEl: HTMLElement | null) {
     };
   }
 
-  function drawData(indices: number[]) {
+  function drawData(indices: number[], initial?: boolean) {
     if (!indices || !indices.length) return;
     console.log('Start drawing initial data…', performance.now());
-    clearCanvas();
-    backupIndices = indices;
-    indices.forEach((coordinateIndex, index) => {
-      drawPixelToBuffer(coordinateIndex, index);
-    });
-    drawBuffer();
-    backupImage = image;
+    if (initial) {
+      indices.forEach((coordinateIndex, index) => {
+        drawPixelToBuffer(coordinateIndex, index);
+      });
+      drawBuffer();
+    } else {
+      clearCanvas();
+      backupIndices = indices;
+      indices.forEach((coordinateIndex, index) => {
+        drawPixelToBuffer(coordinateIndex, index);
+      });
+      drawBuffer();
+      backupImage = image;
+    }
     console.log('Done.', performance.now());
   }
 

@@ -38,14 +38,26 @@ const socket = Socket({
       });
   },
   onMessage: (message) => {
-    const [coordinateIndex, pixelsDrawnCount, owner] = JSON.parse(message) as [
-      string,
-      number,
-      number,
-    ];
-    canvas.drawImmediate(parseInt(coordinateIndex, 10), pixelsDrawnCount, true);
-    ui.updateText(pixelsDrawnCount);
-    if (owner !== 1) previewDrawnCount = pixelsDrawnCount;
+    const parsedMessage = JSON.parse(message);
+    if (!parsedMessage?.length) return;
+    if (parsedMessage.length > 3) {
+      canvas.drawData(parsedMessage as number[], true);
+      ui.updateText(parsedMessage.length);
+      previewDrawnCount = parsedMessage.length;
+    } else {
+      const [coordinateIndex, pixelsDrawnCount, owner] = parsedMessage as [
+        string,
+        number,
+        number,
+      ];
+      canvas.drawImmediate(
+        parseInt(coordinateIndex, 10),
+        pixelsDrawnCount,
+        true,
+      );
+      ui.updateText(pixelsDrawnCount);
+      if (owner !== 1) previewDrawnCount = pixelsDrawnCount;
+    }
   },
 });
 

@@ -7,9 +7,14 @@ export function SocketServer(server: http.Server, canvas?: CanvasInstance) {
 
   return {
     init: () => {
-      wss.on('connection', (socket) => {
+      wss.on('connection', async (socket) => {
         console.log('We have a connection!');
         let eraseMode = false;
+
+        if (canvas) {
+          const initialData = await canvas.getInitialData();
+          socket.send(JSON.stringify(initialData));
+        }
 
         socket.on('error', console.error);
         socket.on('message', async (data) => {

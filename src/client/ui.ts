@@ -135,6 +135,7 @@ export function UI(canvas: Canvas) {
     isAnimating() {
       return animating;
     },
+    isLoading,
     setLoadingError,
   };
 }
