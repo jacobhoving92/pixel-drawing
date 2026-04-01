@@ -57,8 +57,22 @@ export async function Store() {
       return client.lRange(DRAW_KEY, 0, -1);
     },
 
-    async setValues(_values: string[]) {
-      return true;
+    async setValues(values: string[]) {
+      await Promise.all([client.del(DRAW_KEY), client.del(EXISTS_KEY)]);
+
+      const CHUNK = 1000;
+      for (let i = 0; i < values.length; i += CHUNK) {
+        const chunk = values.slice(i, i + CHUNK);
+        const pipeline = client.multi();
+        pipeline.rPush(DRAW_KEY, chunk);
+        const hashArgs: string[] = chunk.flatMap((v) => [v, '1']);
+        pipeline.hSet(EXISTS_KEY, hashArgs);
+        await pipeline.execAsPipeline();
+      }
+
+      const count = await client.lLen(DRAW_KEY);
+      console.log(`setValues complete: ${count} pixels written to Redis`);
+      return count === values.length;
     },
 
     async reset() {

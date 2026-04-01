@@ -132,6 +132,7 @@ async function main() {
         console.log('uploading pixel data');
         try {
           const success = await canvas?.setFromFile(req.file);
+          console.log(`setFromFile result: ${success}`);
           res.json({
             success,
           });
