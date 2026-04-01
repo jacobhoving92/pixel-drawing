@@ -94,7 +94,12 @@ async function main() {
       next();
     });
   }
-  app.use(compression());
+  app.use(compression({
+    filter: (req, res) => {
+      if (req.path === '/api/data') return false;
+      return compression.filter(req, res);
+    },
+  }));
 
   app.get('/admin', authenticate, (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'admin.html'));
@@ -161,13 +166,27 @@ async function main() {
       res.setHeader('Access-Control-Allow-Origin', '*');
     }
     try {
-      const data = await canvas?.getCurrentDataBinary();
-      if (!data) throw new Error('Could not get canvas data');
+      const values = await canvas?.getRawData();
+      if (!values) throw new Error('Could not get canvas data');
       res.setHeader('Content-Type', 'application/octet-stream');
-      res.send(data);
+      const CHUNK = 10000;
+      for (let i = 0; i < values.length; i += CHUNK) {
+        const slice = values.slice(i, i + CHUNK);
+        const buf = Buffer.allocUnsafe(slice.length * 3);
+        for (let j = 0; j < slice.length; j++) {
+          const v = parseInt(slice[j], 10);
+          buf[j * 3] = (v >> 16) & 0xff;
+          buf[j * 3 + 1] = (v >> 8) & 0xff;
+          buf[j * 3 + 2] = v & 0xff;
+        }
+        res.write(buf);
+      }
+      res.end();
     } catch (e: any) {
       console.error(e);
-      res.json({ error: true, message: e.message ?? 'Could not get data' });
+      if (!res.headersSent) {
+        res.json({ error: true, message: e.message ?? 'Could not get data' });
+      }
     }
   });
 

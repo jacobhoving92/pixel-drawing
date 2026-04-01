@@ -117,6 +117,22 @@ export function Canvas(containerEl: HTMLElement | null) {
     console.log('Done.', performance.now());
   }
 
+  // Streaming: draw a chunk of pixels starting at a global offset
+  let streamIndices: number[] = [];
+
+  function drawChunk(indices: number[], offset: number) {
+    for (let i = 0; i < indices.length; i++) {
+      drawPixelToBuffer(indices[i], offset + i);
+    }
+    streamIndices.push(...indices);
+    drawBuffer();
+  }
+
+  function finalizeStream() {
+    backupIndices = streamIndices;
+    backupImage = image;
+  }
+
   let counter = 0;
   let animating = false;
 
@@ -175,6 +191,8 @@ export function Canvas(containerEl: HTMLElement | null) {
       erasePixel(coordinateIndex);
     },
     drawData,
+    drawChunk,
+    finalizeStream,
     getColor,
     startAnimation,
     stopAnimation: handleAnimationComplete,

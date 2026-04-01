@@ -21,25 +21,38 @@ const socket = Socket({
     fetch(window.location.protocol + '//' + hostname + '/api/data')
       .then(async (res) => {
         if (!res.ok) throw new Error('Failed to load pixel data');
-        const buf = await res.arrayBuffer();
-        const bytes = new Uint8Array(buf);
-        const count = bytes.length / 3;
-        const data = new Array<number>(count);
-        const OFFSET = 8388608; // 2^23
-        let prev = 0;
-        for (let i = 0; i < count; i++) {
-          const raw = (bytes[i * 3] << 16) | (bytes[i * 3 + 1] << 8) | bytes[i * 3 + 2];
-          const v = i === 0 ? raw : prev + (raw - OFFSET);
-          data[i] = v;
-          prev = v;
+        const reader = res.body!.getReader();
+        let remainder = new Uint8Array(0);
+        let totalPixels = 0;
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          // Concat leftover bytes from previous chunk with new data
+          const combined = new Uint8Array(remainder.length + value.length);
+          combined.set(remainder);
+          combined.set(value, remainder.length);
+
+          // Process complete 3-byte triplets
+          const usable = combined.length - (combined.length % 3);
+          const count = usable / 3;
+          const chunk: number[] = new Array(count);
+          for (let i = 0; i < count; i++) {
+            chunk[i] = (combined[i * 3] << 16) | (combined[i * 3 + 1] << 8) | combined[i * 3 + 2];
+          }
+
+          canvas.drawChunk(chunk, totalPixels);
+          totalPixels += count;
+          ui.setLoading(false);
+          ui.updateText(totalPixels);
+
+          // Keep leftover bytes for next iteration
+          remainder = combined.slice(usable);
         }
-        return data;
-      })
-      .then((data: number[]) => {
-        canvas.drawData(data);
-        ui.setLoading(false);
-        ui.updateText(data.length);
-        previewDrawnCount = data.length;
+
+        canvas.finalizeStream();
+        previewDrawnCount = totalPixels;
         if (processMode) ui.loopProcess();
       })
       .catch(() => {
